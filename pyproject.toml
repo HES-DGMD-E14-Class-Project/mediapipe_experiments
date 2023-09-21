@@ -1,0 +1,15 @@
+# pyproject.toml
+
+[tool.poetry]
+name = "mediapipe-experiments"
+version = "0.0.1"
+description = "Exploring MediaPipe"
+authors = ["Brian Sam-Bodden <bsbodden@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+opencv-python = "^4.8.0.76"
+mediapipe="0.10.5"
+numpy="^1.26.0"
+python-dotenv = "^1.0.0"
+

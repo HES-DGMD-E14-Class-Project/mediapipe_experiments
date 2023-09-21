@@ -1,0 +1,55 @@
+# MediaPipe Experiments
+
+Experiment with MediaPipe to extract and display landmarks for Hands and Pose in RealTime use a Video Feed (Webcam)
+
+# Setting up your Environment
+
+To run the code locally, you'll need to install and setup a few things:
+
+* Python 3 (if you don't have a recent version of Python, [grab one here](https://www.python.org/downloads/).  We've tested on Python 3.10)
+* Poetry (dependency manager for Python - [read the installation instructions here](https://python-poetry.org/docs/#installation))
+* Git command line tools (the `git` command).  Get these from [the Git website](https://git-scm.com/downloads) if needed.
+
+## Cloning this Repository
+
+At the terminal, clone the repository to your local machine:
+
+```bash
+git clone https://github.com/HES-DGMD-E14-Class-Project/mediapipe_experiments.git
+```
+
+Then, change directory into the repository folder:
+
+```bash
+cd mediapipe_experiments
+```
+
+## Installing Python Dependencies
+
+We're using the Poetry tool to manage Python virtual environments and dependencies.  Install the dependencies that this workshop uses with the following command:
+
+```bash
+poetry install
+```
+
+## Running the Experiments
+
+### Pose Landmarker Demo
+
+```bash
+poetry run python PoseLandmarkerDemo.py
+```
+
+### Hand Landmarker Demo
+
+```bash
+poetry run python HandLandmarkerDemo.py
+```
+
+### Hand Landmarker Finger Counting Demo
+
+```bash
+poetry run python HandLandmarkerFingerCounterDemo.py
+```
+
+To quit any of the demos, press "q"
