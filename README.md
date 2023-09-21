@@ -36,17 +36,23 @@ poetry install
 
 ### Pose Landmarker Demo
 
+Based on https://developers.google.com/mediapipe/solutions/vision/pose_landmarker/python
+
 ```bash
 poetry run python PoseLandmarkerDemo.py
 ```
 
 ### Hand Landmarker Demo
 
+Based on https://developers.google.com/mediapipe/solutions/vision/hand_landmarker/python#live-stream
+
 ```bash
 poetry run python HandLandmarkerDemo.py
 ```
 
 ### Hand Landmarker Finger Counting Demo
+
+Reverse engineering of this Video https://www.youtube.com/watch?v=p5Z_GGRCI5s (this was bad code and for an ancient version of MediaPipe)
 
 ```bash
 poetry run python HandLandmarkerFingerCounterDemo.py
