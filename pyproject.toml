@@ -7,9 +7,10 @@ description = "Exploring MediaPipe"
 authors = ["Brian Sam-Bodden <bsbodden@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.9,<3.12"
 opencv-python = "^4.8.0.76"
-mediapipe="0.10.5"
-numpy="^1.26.0"
+mediapipe = "0.10.5"
+numpy = "1.24.3"
 python-dotenv = "^1.0.0"
-
+tensorflow = {version = ">=2.13.0", markers = "sys_platform != 'darwin'"}
+tensorflow-macos = {version = ">=2.13.0", markers = "sys_platform == 'darwin'"}
