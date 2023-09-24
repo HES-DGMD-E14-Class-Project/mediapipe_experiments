@@ -58,4 +58,20 @@ Reverse engineering of this Video https://www.youtube.com/watch?v=p5Z_GGRCI5s (t
 poetry run python HandLandmarkerFingerCounterDemo.py
 ```
 
+### Hand Gesture Classification Demo
+
+Reverse engineering of this Video https://www.youtube.com/watch?v=p5Z_GGRCI5s (this was bad code and for an ancient version of MediaPipe)
+
+```bash
+poetry run python HashGestureClassificationDemo.py
+```
+
+### Face Landmarker Demo
+
+Reverse engineering of this Video https://www.youtube.com/watch?v=p5Z_GGRCI5s (this was bad code and for an ancient version of MediaPipe)
+
+```bash
+poetry run python FaceLandmarkerDemo.py
+```
+
 To quit any of the demos, press "q"
