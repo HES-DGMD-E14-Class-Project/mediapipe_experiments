@@ -14,3 +14,6 @@ numpy = "1.24.3"
 python-dotenv = "^1.0.0"
 tensorflow = {version = ">=2.13.0", markers = "sys_platform != 'darwin'"}
 tensorflow-macos = {version = ">=2.13.0", markers = "sys_platform == 'darwin'"}
+pandas = "^2.1.1"
+pyarrow = "^13.0.0"
+fastparquet = "^2023.8.0"

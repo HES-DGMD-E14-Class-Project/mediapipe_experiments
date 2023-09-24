@@ -74,4 +74,14 @@ Reverse engineering of this Video https://www.youtube.com/watch?v=p5Z_GGRCI5s (t
 poetry run python FaceLandmarkerDemo.py
 ```
 
+### LandmarksPlayer
+
+A tkinter app to visualize the data set from https://www.kaggle.com/competitions/asl-signs/data - download the zip file
+and unzip it somewhere in your computer, say `~/Desktop/asl-signs` then make a copy of `.env-examples`, rename it to `.env`
+and change the environment property `ASL_SIGNS_BASE_DIRECTORY` to point to the `asl-signs` folder.
+
+```bash
+poetry run python FaceLandmarkerDemo.py
+```
+
 To quit any of the demos, press "q"
