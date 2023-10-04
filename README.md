@@ -81,7 +81,7 @@ and unzip it somewhere in your computer, say `~/Desktop/asl-signs` then make a c
 and change the environment property `ASL_SIGNS_BASE_DIRECTORY` to point to the `asl-signs` folder.
 
 ```bash
-poetry run python FaceLandmarkerDemo.py
+poetry run python LandmarksPlayer.py
 ```
 
 To quit any of the demos, press "q"
