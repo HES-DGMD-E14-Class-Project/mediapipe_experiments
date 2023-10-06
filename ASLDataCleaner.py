@@ -92,7 +92,12 @@ class ASLDataCleaner:
             # Process the files and produce a dataframe
             df = self._read_and_concatenate_parquet_files(parquet_files, sign)
 
-            df["label"] = self.label_map[sign]
+            # Check if the sign exists in the label map
+            if sign in self.label_map:
+                df["label"] = self.label_map[sign]
+            else:
+                print(f"Warning: '{sign}' not found in label map. Skipping...")
+                continue
 
             # Handle NaN values
             df = self.handle_nan_values(df)
@@ -123,17 +128,21 @@ class ASLDataCleaner:
         return [os.path.join(self.base_dir, f) for f in sign_files]
 
     def _read_and_concatenate_parquet_files(self, parquet_files, sign):
-        dfs = []
-        for f in tqdm(parquet_files, desc="Reading Parquet Files"):
-            relative_path = os.path.relpath(f, self.base_dir)
-            matched_rows = self.train_df[self.train_df["path"] == relative_path]
-            if matched_rows.empty:
-                print(f"Warning: No match found for file {f}")
-                continue
-            df = pd.read_parquet(f)
-            df["sign"] = sign  # Add sign information here
-            dfs.append(df)
-        return pd.concat(dfs, ignore_index=True)
+        if not parquet_files:
+            print(f"No parquet files found for sign {sign}")
+            return pd.DataFrame()  # return an empty dataframe
+        else:
+            dfs = []
+            for f in tqdm(parquet_files, desc="Reading Parquet Files"):
+                relative_path = os.path.relpath(f, self.base_dir)
+                matched_rows = self.train_df[self.train_df["path"] == relative_path]
+                if matched_rows.empty:
+                    print(f"Warning: No match found for file {f}")
+                    continue
+                df = pd.read_parquet(f)
+                df["sign"] = sign  # Add sign information here
+                dfs.append(df)
+            return pd.concat(dfs, ignore_index=True)
 
     def remove_outliers(self, df):
         """
@@ -403,7 +412,6 @@ def main():
         "icecream",
         "if",
         "into",
-        "interpolate",
         "jump",
         "jacket",
         "jeans",
@@ -417,7 +425,6 @@ def main():
         "lips",
         "look",
         "loud",
-        "love",
         "mad",
         "make",
         "man",
