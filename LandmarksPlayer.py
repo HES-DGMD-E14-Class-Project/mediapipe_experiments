@@ -33,16 +33,24 @@ class App:
         self.label_dropdown = ttk.Combobox(root, textvariable=self.label_var)
         self.label_dropdown["values"] = labels
         self.label_dropdown.bind("<<ComboboxSelected>>", self.on_dropdown_select)
-        ttk.Label(root, text="Sign").grid(row=0, column=0)
-        self.label_dropdown.grid(row=0, column=1)
+        ttk.Label(root, text="Sign").grid(row=0, column=0, sticky="w")
+        self.label_dropdown.grid(row=0, column=1, sticky="ew")
+
+        # Label for Number of Parquet Files
+        self.num_files_label = ttk.Label(root, text="Number of Examples: 0")
+        self.num_files_label.grid(row=1, column=0, columnspan=2, sticky="w")
 
         # Listbox for files
         self.file_listbox = tk.Listbox(root, height=10, width=40)
-        self.file_listbox.grid(row=1, column=0, columnspan=2)
+        self.file_listbox.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
         # Play Button
         self.play_button = ttk.Button(root, text="Play", command=self.play_landmarks)
-        self.play_button.grid(row=2, column=1)
+        self.play_button.grid(row=3, column=0, columnspan=2)
+
+        # Configure weights
+        root.grid_columnconfigure(1, weight=1)
+        root.grid_rowconfigure(2, weight=1)
 
     def on_dropdown_select(self, event):
         # Clear the listbox
@@ -59,6 +67,10 @@ class App:
 
         # Dictionary to map relative paths to full paths
         self.path_map = dict(zip(relative_files, full_paths))
+
+        # Update label for number of parquet files
+        num_files = len(relative_files)
+        self.num_files_label.config(text=f"Number of Examples: {num_files}")
 
         # Populate the listbox with relative paths
         for relative_path in relative_files:
@@ -110,4 +122,5 @@ class App:
 if __name__ == "__main__":
     root = tk.Tk()
     app = App(root)
+    root.geometry("500x500")
     root.mainloop()
