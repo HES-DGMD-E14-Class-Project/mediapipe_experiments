@@ -1,11 +1,12 @@
+import os
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, messagebox
 import pandas as pd
-import cv2
 import json
 import numpy as np
-import os
 from dotenv import load_dotenv
+import cv2
+from PIL import Image, ImageTk
 
 # Load environment variables / secrets from .env file.
 load_dotenv()
@@ -22,7 +23,100 @@ df = pd.read_csv(f"{BASE_DIRECTORY}/train.csv")
 print(df.columns)
 
 
-# Define the GUI
+class VideoPlayer(tk.Toplevel):
+    def __init__(self, master, file_path, total_frames):
+        super().__init__(master)
+        self.title("Video Player")
+        self.geometry("500x600")
+        self.file_path = file_path
+        self.total_frames = total_frames
+        self.frame_number = 0
+        self.playing = False
+        self.df_landmarks = pd.read_parquet(self.file_path)
+        self.df_landmarks = self.df_landmarks.sort_values(
+            by=["frame", "landmark_index"]
+        )
+
+        # Play/Pause Button
+        self.play_var = tk.StringVar(value="▶️ Play")
+        self.play_button = ttk.Button(
+            self, textvariable=self.play_var, command=self.toggle_play
+        )
+        self.play_button.pack(side="top", fill="x")
+
+        # Video Frame
+        self.video_frame = ttk.Label(self)
+        self.video_frame.pack(side="top", fill="both", expand=True)
+
+        # Frame Label
+        self.frame_label = ttk.Label(
+            self, text=f"Frame {self.frame_number + 1}/{self.total_frames}"
+        )
+        self.frame_label.pack(side="top", fill="x")
+
+        # Frame Slider
+        self.frame_slider = ttk.Scale(
+            self,
+            from_=0,
+            to=self.total_frames - 1,
+            orient="horizontal",
+            command=self.update_frame,
+        )
+        self.frame_slider.pack(side="bottom", fill="x")
+
+        self.display_frame()
+
+    def toggle_play(self):
+        self.playing = not self.playing
+        if self.playing:
+            self.play_var.set("⏸️ Pause")
+            self.frame_slider.config(state="readonly")
+            self.play_frames()
+        else:
+            self.play_var.set("▶️ Play")
+            self.frame_slider.config(state="normal")
+
+    def play_frames(self):
+        if not self.playing:
+            return
+
+        self.display_frame()
+        self.frame_number = (self.frame_number + 1) % self.total_frames
+        self.frame_slider.set(self.frame_number)
+
+        if self.playing:
+            self.after(33, self.play_frames)  # Adjusted delay for 30 fps
+
+    def display_frame(self):
+        frame_width, frame_height = 500, 500
+        frame_landmarks = self.df_landmarks[
+            self.df_landmarks["frame"] == self.frame_number
+        ]
+        frame = 255 * np.ones(
+            (frame_height, frame_width, 3), dtype=np.uint8
+        )  # white background
+
+        for _, landmark in frame_landmarks.iterrows():
+            if not pd.isna(landmark["x"]) and not pd.isna(landmark["y"]):
+                x = int(landmark["x"] * frame_width)
+                y = int(landmark["y"] * frame_height)
+                cv2.circle(frame, (x, y), 2, (0, 0, 255), -1)
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.resize(frame, (frame_width, frame_height))
+        photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
+
+        self.video_frame.config(image=photo)
+        self.video_frame.image = photo
+        self.frame_label.config(
+            text=f"Frame {self.frame_number + 1}/{self.total_frames}"
+        )
+
+    def update_frame(self, value):
+        self.frame_number = int(float(value))
+        self.display_frame()
+
+
 class App:
     def __init__(self, root):
         self.root = root
@@ -44,9 +138,9 @@ class App:
         self.file_listbox = tk.Listbox(root, height=10, width=40)
         self.file_listbox.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
-        # Play Button
-        self.play_button = ttk.Button(root, text="Play", command=self.play_landmarks)
-        self.play_button.grid(row=3, column=0, columnspan=2)
+        # Open Button
+        self.open_button = ttk.Button(root, text="Open", command=self.open_video_player)
+        self.open_button.grid(row=3, column=0, columnspan=2)
 
         # Configure weights
         root.grid_columnconfigure(1, weight=1)
@@ -76,47 +170,17 @@ class App:
         for relative_path in relative_files:
             self.file_listbox.insert(tk.END, relative_path)
 
-    def play_landmarks(self):
-        # Retrieve the selected file from the listbox
+    def open_video_player(self):
         selected_relative_path = self.file_listbox.get(tk.ACTIVE)
-        selected_file = self.path_map[selected_relative_path]
-
-        if not selected_file:
+        if not selected_relative_path:
             messagebox.showwarning("Warning", "Please select a file.")
             return
 
-        # Read landmarks from the parquet file
+        selected_file = self.path_map[selected_relative_path]
         df_landmarks = pd.read_parquet(selected_file)
+        total_frames = df_landmarks["frame"].max() + 1
 
-        # Sort landmarks based on frame and landmark_index
-        df_landmarks = df_landmarks.sort_values(by=["frame", "landmark_index"])
-
-        # Create a window to visualize the landmarks
-        window_name = "Landmark Visualization"
-        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-
-        frame_width, frame_height = 500, 500
-
-        # Create a unique frame for each unique frame value in df_landmarks
-        for frame_number in df_landmarks["frame"].unique():
-            frame_landmarks = df_landmarks[df_landmarks["frame"] == frame_number]
-
-            frame = 255 * np.ones(
-                (frame_height, frame_width, 3), dtype=np.uint8
-            )  # white background
-
-            for _, landmark in frame_landmarks.iterrows():
-                if not pd.isna(landmark["x"]) and not pd.isna(landmark["y"]):
-                    x = int(landmark["x"] * frame_width)
-                    y = int(landmark["y"] * frame_height)
-                    cv2.circle(frame, (x, y), 2, (0, 0, 255), -1)
-
-            cv2.imshow(window_name, frame)
-
-            if cv2.waitKey(20) & 0xFF == ord("q"):
-                break
-
-        cv2.destroyWindow(window_name)
+        VideoPlayer(self.root, selected_file, total_frames)
 
 
 if __name__ == "__main__":
