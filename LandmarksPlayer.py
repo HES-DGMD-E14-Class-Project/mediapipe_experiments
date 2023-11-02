@@ -24,6 +24,29 @@ print(df.columns)
 
 
 class VideoPlayer(tk.Toplevel):
+    HAND_CONNECTIONS = frozenset([
+        # Palm
+        (0, 1), (0, 5), (9, 13), (13, 17), (5, 9), (0, 17),
+        # Thumb
+        (1, 2), (2, 3), (3, 4),
+        # Index finger
+        (5, 6), (6, 7), (7, 8),
+        # Middle finger
+        (9, 10), (10, 11), (11, 12),
+        # Ring finger
+        (13, 14), (14, 15), (15, 16),
+        # Pinky
+        (17, 18), (18, 19), (19, 20),
+    ])
+
+    POSE_CONNECTIONS = frozenset([(0, 1), (1, 2), (2, 3), (3, 7), (0, 4), (4, 5),
+                                  (5, 6), (6, 8), (9, 10), (11, 12), (11, 13),
+                                  (13, 15), (15, 17), (15, 19), (15, 21), (17, 19),
+                                  (12, 14), (14, 16), (16, 18), (16, 20), (16, 22),
+                                  (18, 20), (11, 23), (12, 24), (23, 24), (23, 25),
+                                  (24, 26), (25, 27), (26, 28), (27, 29), (28, 30),
+                                  (29, 31), (30, 32), (27, 31), (28, 32)])
+
     def __init__(self, master, file_path, total_frames):
         super().__init__(master)
         self.title("Video Player")
@@ -36,6 +59,9 @@ class VideoPlayer(tk.Toplevel):
         self.df_landmarks = self.df_landmarks.sort_values(
             by=["frame", "landmark_index"]
         )
+
+        unique_types = self.df_landmarks["type"].unique()
+        print("Unique Landmark types in dataset:", unique_types)
 
         # Play/Pause Button
         self.play_var = tk.StringVar(value="▶️ Play")
@@ -64,6 +90,13 @@ class VideoPlayer(tk.Toplevel):
         )
         self.frame_slider.pack(side="bottom", fill="x")
 
+        # Add a checkbox for showing connections
+        self.show_connections_var = tk.BooleanVar(value=False)
+        self.show_connections_checkbox = ttk.Checkbutton(
+            self, text="Connected", variable=self.show_connections_var
+        )
+        self.show_connections_checkbox.pack(side="top", fill="x")
+
         self.display_frame()
 
     def toggle_play(self):
@@ -87,6 +120,26 @@ class VideoPlayer(tk.Toplevel):
         if self.playing:
             self.after(33, self.play_frames)  # Adjusted delay for 30 fps
 
+    def draw_hand_connections(self, frame, hand_landmarks, frame_width, frame_height):
+        for (start, end) in self.HAND_CONNECTIONS:
+            if start < len(hand_landmarks) and end < len(hand_landmarks):
+                start_landmark = hand_landmarks.iloc[start]
+                end_landmark = hand_landmarks.iloc[end]
+                if not pd.isna(start_landmark["x"]) and not pd.isna(start_landmark["y"]) and not pd.isna(end_landmark["x"]) and not pd.isna(end_landmark["y"]):
+                    start_point = (int(start_landmark["x"] * frame_width), int(start_landmark["y"] * frame_height))
+                    end_point = (int(end_landmark["x"] * frame_width), int(end_landmark["y"] * frame_height))
+                    cv2.line(frame, start_point, end_point, (255, 0, 0), 1)
+
+    def draw_pose_connections(self, frame, pose_landmarks, frame_width, frame_height):
+        for (start, end) in self.POSE_CONNECTIONS:
+            if start < len(pose_landmarks) and end < len(pose_landmarks):
+                start_landmark = pose_landmarks.iloc[start]
+                end_landmark = pose_landmarks.iloc[end]
+                if not pd.isna(start_landmark["x"]) and not pd.isna(start_landmark["y"]) and not pd.isna(end_landmark["x"]) and not pd.isna(end_landmark["y"]):
+                    start_point = (int(start_landmark["x"] * frame_width), int(start_landmark["y"] * frame_height))
+                    end_point = (int(end_landmark["x"] * frame_width), int(end_landmark["y"] * frame_height))
+                    cv2.line(frame, start_point, end_point, (255, 0, 0), 1)
+
     def display_frame(self):
         frame_width, frame_height = 500, 500
         frame_landmarks = self.df_landmarks[
@@ -101,6 +154,22 @@ class VideoPlayer(tk.Toplevel):
                 x = int(landmark["x"] * frame_width)
                 y = int(landmark["y"] * frame_height)
                 cv2.circle(frame, (x, y), 2, (0, 0, 255), -1)
+
+        # Draw connections for hand landmarks if checkbox is checked
+        if self.show_connections_var.get():
+            for hand_type in ["left_hand", "right_hand"]:
+                hand_landmarks = frame_landmarks[frame_landmarks["type"] == hand_type]
+
+                if hand_landmarks.isnull().all().all():
+                    # print(f"{hand_type} is not visible in this frame.")
+                    continue
+
+                if self.show_connections_var.get():
+                    self.draw_hand_connections(frame, hand_landmarks, frame_width, frame_height)
+
+            pose_landmarks = frame_landmarks[frame_landmarks["type"] == "pose"]
+            if not pose_landmarks.empty:
+                self.draw_pose_connections(frame, pose_landmarks, frame_width, frame_height)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.resize(frame, (frame_width, frame_height))
