@@ -9,13 +9,13 @@ from dotenv import load_dotenv
 
 class ASLGraphDataBuilder:
     # Constants for pose landmarks
-    NOSE = 0
-    LEFT_SHOULDER = 11
-    RIGHT_SHOULDER = 12
-    LEFT_ELBOW = 13
-    RIGHT_ELBOW = 14
-    LEFT_WRIST = 15
-    RIGHT_WRIST = 16
+    POSE_NOSE = 0
+    POSE_LEFT_SHOULDER = 11
+    POSE_RIGHT_SHOULDER = 12
+    POSE_LEFT_ELBOW = 13
+    POSE_RIGHT_ELBOW = 14
+    HAND_LEFT_WRIST = 0
+    HAND_RIGHT_WRIST = 0
 
     def __init__(self, base_dir, signs_to_process, max_files_per_sign, target_frames):
         """
@@ -70,17 +70,20 @@ class ASLGraphDataBuilder:
 
     def _extract_relevant_landmarks(self, df):
         """
-        Filters the dataframe to only include relevant landmarks.
+        Filters the dataframe to only include a minimal set of relevant landmarks for facial contours.
 
         :param df: The dataframe to filter.
         :return: The dataframe with only relevant landmarks.
         """
-        # Pose landmarks from the waist up (excluding wrists, hands, and face)
-        pose_landmarks_waist_up_no_face = [9, 10, 11, 12, 13, 14]
+        # Pose landmarks from the waist up (excluding wrists, hands, and face - just the nose)
+        pose_landmarks_waist_up_no_face = [0, 9, 10, 11, 12, 13, 14]
 
-        # Face landmarks for the outline of the face, eyes, and lips (inner and outer)
-        face_landmarks_outline_eyes_lips = [
-            # Outline of the face (we take a subset that represents the main contour)
+        # Minimal set of face landmarks for the outline of the face, eyes, and lips
+        # For the face oval, keep the transition points from sides of the face, corners,
+        # points where the face starts curving toward the chin, and some points for the chin.
+        # For eyes and lips, keep the corners and skip every other point.
+        face_landmarks_minimal = {
+            # Reduced face oval (keeping side points, corners, and a few chin points)
             10,
             338,
             297,
@@ -96,7 +99,6 @@ class ASLGraphDataBuilder:
             397,
             365,
             379,
-            378,
             400,
             377,
             152,
@@ -116,62 +118,25 @@ class ASLGraphDataBuilder:
             54,
             103,
             67,
-            109,
-            # Eyebrows
-            46,
-            53,
-            52,
-            65,
-            55,
-            70,
-            63,
-            105,
-            66,
-            107,
-            276,
-            283,
-            282,
-            295,
-            285,
-            300,
-            293,
-            334,
-            296,
-            336,
-            # Eyes
+            # Right eye (skip every other point)
             33,
-            7,
-            163,
-            144,
-            145,
-            153,
-            154,
-            155,
             133,
             246,
             161,
-            160,
             159,
             158,
             157,
             173,
+            # Left eye (skip every other point)
             263,
-            249,
-            390,
-            373,
-            374,
-            380,
-            381,
-            382,
             362,
             466,
             388,
-            387,
             386,
             385,
             384,
             398,
-            # Lips (inner and outer)
+            # Reduced lips (keeping corners and midpoints)
             61,
             146,
             91,
@@ -182,7 +147,6 @@ class ASLGraphDataBuilder:
             405,
             321,
             375,
-            291,
             78,
             95,
             88,
@@ -193,32 +157,37 @@ class ASLGraphDataBuilder:
             402,
             318,
             324,
-            308,
-            191,
-            80,
-            81,
-            82,
-            13,
-            312,
-            311,
-            310,
-            415,
-        ]
+        }
 
         relevant_landmarks = [
             *["pose-" + str(i) for i in pose_landmarks_waist_up_no_face],
-            *["face-" + str(i) for i in face_landmarks_outline_eyes_lips],
+            *["face-" + str(i) for i in face_landmarks_minimal],
             *["right_hand-" + str(i) for i in range(21)],
             *["left_hand-" + str(i) for i in range(21)],
         ]
 
+        # Filter the DataFrame
         df["landmark_type"] = df["row_id"].apply(lambda x: x.split("-")[1])
         df["landmark_index"] = df["row_id"].apply(lambda x: int(x.split("-")[2]))
         df["landmark_id"] = df["landmark_type"] + "-" + df["landmark_index"].astype(str)
-        df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
-        df_filtered = df_filtered[
-            ["row_id", "landmark_index", "x", "y", "frame", "type"]
-        ]
+
+        # Include 'arms_configuration' in the filtered DataFrame
+        if "arms_configuration" in df.columns:
+            frames_configuration = df[["frame", "arms_configuration"]].drop_duplicates()
+            df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
+            df_filtered = df_filtered[
+                ["row_id", "landmark_index", "x", "y", "frame", "type"]
+            ]
+            # Merge the arms_configuration back into the filtered DataFrame
+            df_filtered = df_filtered.merge(
+                frames_configuration, on="frame", how="left"
+            )
+        else:
+            df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
+            df_filtered = df_filtered[
+                ["row_id", "landmark_index", "x", "y", "frame", "type"]
+            ]
+
         return df_filtered
 
     def _handle_nan_values(self, df):
@@ -627,10 +596,12 @@ class ASLGraphDataBuilder:
 
         # Check if the right and left wrists are present in the data
         right_wrist_data = frame_data.loc[
-            (frame_data["type"] == "pose") & (frame_data.index == self.RIGHT_WRIST)
+            (frame_data["type"] == "right_hand")
+            & (frame_data.index == self.HAND_RIGHT_WRIST)
         ]
         left_wrist_data = frame_data.loc[
-            (frame_data["type"] == "pose") & (frame_data.index == self.LEFT_WRIST)
+            (frame_data["type"] == "left_hand")
+            & (frame_data.index == self.HAND_LEFT_WRIST)
         ]
 
         # If either wrist is not present, we cannot determine if arms are crossed
@@ -651,19 +622,19 @@ class ASLGraphDataBuilder:
         # Extract the x coordinates for shoulders and wrists if they exist
         right_shoulder_x = frame_data[
             (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.RIGHT_SHOULDER)
+            & (frame_data["landmark_index"] == self.POSE_RIGHT_SHOULDER)
         ]["x"].values
         left_shoulder_x = frame_data[
             (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.LEFT_SHOULDER)
+            & (frame_data["landmark_index"] == self.POSE_LEFT_SHOULDER)
         ]["x"].values
         right_wrist_x = frame_data[
-            (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.RIGHT_WRIST)
+            (frame_data["type"] == "right_hand")
+            & (frame_data["landmark_index"] == self.HAND_RIGHT_WRIST)
         ]["x"].values
         left_wrist_x = frame_data[
-            (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.LEFT_WRIST)
+            (frame_data["type"] == "left_hand")
+            & (frame_data["landmark_index"] == self.HAND_LEFT_WRIST)
         ]["x"].values
 
         # Check if the required landmarks are present
@@ -689,21 +660,21 @@ class ASLGraphDataBuilder:
         # Filter for right and left elbow 'y' values
         right_elbow_data = frame_data[
             (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.RIGHT_ELBOW)
+            & (frame_data["landmark_index"] == self.POSE_RIGHT_ELBOW)
         ]
         left_elbow_data = frame_data[
             (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.LEFT_ELBOW)
+            & (frame_data["landmark_index"] == self.POSE_LEFT_ELBOW)
         ]
 
         # Filter for right and left shoulder 'y' values
         right_shoulder_data = frame_data[
             (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.RIGHT_SHOULDER)
+            & (frame_data["landmark_index"] == self.POSE_RIGHT_SHOULDER)
         ]
         left_shoulder_data = frame_data[
             (frame_data["type"] == "pose")
-            & (frame_data["landmark_index"] == self.LEFT_SHOULDER)
+            & (frame_data["landmark_index"] == self.POSE_LEFT_SHOULDER)
         ]
 
         # Initialize flags
@@ -730,22 +701,22 @@ class ASLGraphDataBuilder:
         try:
             right_elbow_y = frame_data.loc[
                 (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.RIGHT_ELBOW),
+                & (frame_data["landmark_index"] == self.POSE_RIGHT_ELBOW),
                 "y",
             ].iloc[0]
             left_elbow_y = frame_data.loc[
                 (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.LEFT_ELBOW),
+                & (frame_data["landmark_index"] == self.POSE_LEFT_ELBOW),
                 "y",
             ].iloc[0]
             right_shoulder_y = frame_data.loc[
                 (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.RIGHT_SHOULDER),
+                & (frame_data["landmark_index"] == self.POSE_RIGHT_SHOULDER),
                 "y",
             ].iloc[0]
             left_shoulder_y = frame_data.loc[
                 (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.LEFT_SHOULDER),
+                & (frame_data["landmark_index"] == self.POSE_LEFT_SHOULDER),
                 "y",
             ].iloc[0]
         except (
@@ -759,18 +730,18 @@ class ASLGraphDataBuilder:
     def _are_arms_gesturing_to_body(self, frame_data):
         try:
             right_wrist_x = frame_data.loc[
-                (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.RIGHT_WRIST),
+                (frame_data["type"] == "right_hand")
+                & (frame_data["landmark_index"] == self.HAND_RIGHT_WRIST),
                 "x",
             ].iloc[0]
             left_wrist_x = frame_data.loc[
-                (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.LEFT_WRIST),
+                (frame_data["type"] == "left_hand")
+                & (frame_data["landmark_index"] == self.HAND_LEFT_WRIST),
                 "x",
             ].iloc[0]
             nose_x = frame_data.loc[
                 (frame_data["type"] == "pose")
-                & (frame_data["landmark_index"] == self.NOSE),
+                & (frame_data["landmark_index"] == self.POSE_NOSE),
                 "x",
             ].iloc[0]
         except (
@@ -923,6 +894,7 @@ class ASLGraphDataBuilder:
                 df = self._calculate_finger_joint_angles(df)
                 df = self._calculate_finger_orientation_angles(df)
                 df = self._calculate_arms_configuration(df)
+
                 example = self._format_example(df, sign)
 
                 if example is not None:
@@ -950,7 +922,7 @@ def main():
     load_dotenv()
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
     SIGNS_TO_PROCESS = [
-        #"alligator",
+        # "alligator",
         # "duck",
         # "elephant",
         # "giraffe",
