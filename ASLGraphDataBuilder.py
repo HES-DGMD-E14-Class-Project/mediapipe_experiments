@@ -788,7 +788,88 @@ class ASLGraphDataBuilder:
 
         return df
 
-    def _format_example(self, df, sign):
+    # Temporal Features
+
+    def _calculate_temporal_features(self, df):
+        # First, ensure the dataframe is sorted by frame
+        df = df.sort_values(by=["frame", "landmark_index"]).reset_index(drop=True)
+
+        # Initialize columns for velocity and acceleration
+        for coord in ["x", "y"]:
+            df[f"velocity_{coord}"] = np.nan
+            df[f"acceleration_{coord}"] = np.nan
+
+        # Initialize velocity and acceleration at frame 0 to zero for all landmarks
+        for coord in ["x", "y"]:
+            df.loc[df["frame"] == 0, f"velocity_{coord}"] = 0
+            df.loc[df["frame"] == 0, f"acceleration_{coord}"] = 0
+
+        # Get the list of unique frames to loop through
+        unique_frames = df["frame"].unique()
+
+        # Loop through each pair of consecutive frames
+        for i in range(len(unique_frames) - 1):
+            current_frame = unique_frames[i]
+            next_frame = unique_frames[i + 1]
+
+            # Get the landmarks for the current and next frame
+            current_frame_landmarks = df[df["frame"] == current_frame]
+            next_frame_landmarks = df[df["frame"] == next_frame]
+
+            # Find common landmarks by index and type
+            common_landmarks = set(
+                zip(
+                    current_frame_landmarks["landmark_index"],
+                    current_frame_landmarks["type"],
+                )
+            ).intersection(
+                set(
+                    zip(
+                        next_frame_landmarks["landmark_index"],
+                        next_frame_landmarks["type"],
+                    )
+                )
+            )
+
+            # Calculate temporal features for common landmarks
+            for landmark_index, landmark_type in common_landmarks:
+                current_landmark_data = current_frame_landmarks[
+                    (current_frame_landmarks["landmark_index"] == landmark_index)
+                    & (current_frame_landmarks["type"] == landmark_type)
+                ]
+                next_landmark_data = next_frame_landmarks[
+                    (next_frame_landmarks["landmark_index"] == landmark_index)
+                    & (next_frame_landmarks["type"] == landmark_type)
+                ]
+
+                # Ensure there is only one row per landmark per frame
+                if len(current_landmark_data) == 1 and len(next_landmark_data) == 1:
+                    for coord in ["x", "y"]:
+                        # Calculate velocity
+                        velocity = (
+                            next_landmark_data[coord].values[0]
+                            - current_landmark_data[coord].values[0]
+                        )
+                        df.loc[next_landmark_data.index, f"velocity_{coord}"] = velocity
+
+                        # Calculate acceleration
+                        if i > 0:
+                            prev_velocity = df.loc[
+                                current_landmark_data.index, f"velocity_{coord}"
+                            ].values[0]
+                            acceleration = velocity - prev_velocity
+                            df.loc[
+                                next_landmark_data.index, f"acceleration_{coord}"
+                            ] = acceleration
+                        else:
+                            # For the second frame (i == 0), set acceleration to zero
+                            df.loc[
+                                next_landmark_data.index, f"acceleration_{coord}"
+                            ] = 0
+
+        return df
+
+    def _format_example(self, df, parquet_file):
         """
         Formats a single example into the required output format.
 
@@ -805,12 +886,11 @@ class ASLGraphDataBuilder:
                 "spatial": {
                     "arms_configuration": frame_data["arms_configuration"].iloc[0]
                 },
+                "temporal": [],
             }
 
             for landmark_type, landmark_data in frame_data.groupby("type"):
                 landmarks = landmark_data[["x", "y"]].values.tolist()
-                landmark_type = landmark_data["type"].iloc[0]
-
                 frame_info["landmarks"].extend(landmarks)
                 frame_info["landmark_types"].extend(
                     [
@@ -818,6 +898,32 @@ class ASLGraphDataBuilder:
                         for idx in landmark_data["landmark_index"]
                     ]
                 )
+
+                # Check if velocity and acceleration columns are present
+                if "velocity_x" in landmark_data and "velocity_y" in landmark_data:
+                    for _, row in landmark_data.iterrows():
+                        # Skip the temporal data if velocity or acceleration is NaN
+                        if (
+                            pd.isna(row["velocity_x"])
+                            or pd.isna(row["velocity_y"])
+                            or pd.isna(row["acceleration_x"])
+                            or pd.isna(row["acceleration_y"])
+                        ):
+                            continue
+
+                        frame_info["temporal"].append(
+                            {
+                                "landmark": f"{landmark_type}-{int(row['landmark_index'])}",
+                                "velocity": {
+                                    "x": row["velocity_x"],
+                                    "y": row["velocity_y"],
+                                },
+                                "acceleration": {
+                                    "x": row["acceleration_x"],
+                                    "y": row["acceleration_y"],
+                                },
+                            }
+                        )
 
             # Add hand features
             for hand in ["right_hand", "left_hand"]:
@@ -848,13 +954,13 @@ class ASLGraphDataBuilder:
                     if angle_value.size > 0 and not pd.isnull(angle_value[0]):
                         frame_info["spatial"][angle_name] = angle_value[0]
 
-            # Remove the "hand_features" key if it's empty
+            # Remove the "spatial" key if it's empty
             if not frame_info["spatial"]:
-                frame_info.pop("hand_features")
+                frame_info.pop("spatial")
 
             frames.append(frame_info)
 
-        result = {"frames": frames, "sign": sign}
+        result = {"frames": frames, "file": parquet_file}
         return result
 
     def process(self):
@@ -886,16 +992,21 @@ class ASLGraphDataBuilder:
                     continue
 
                 df = self._drop_z_coordinate(df)
-                df = self._normalize_coordinates(df)
-                df = self._smooth_landmarks(df, window_length=5, polyorder=3)
                 df = self._interpolate_frames(df)
+
+                # Calculate temporal features
+                df = self._calculate_temporal_features(df)
+
                 df = self._calculate_hand_features(df)
                 df = self._calculate_wrist_features(df)
                 df = self._calculate_finger_joint_angles(df)
                 df = self._calculate_finger_orientation_angles(df)
                 df = self._calculate_arms_configuration(df)
 
-                example = self._format_example(df, sign)
+                df = self._normalize_coordinates(df)
+                df = self._smooth_landmarks(df, window_length=5, polyorder=3)
+
+                example = self._format_example(df, parquet_file)
 
                 if example is not None:
                     all_signs_data[sign]["examples"].append(example)
@@ -922,19 +1033,19 @@ def main():
     load_dotenv()
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
     SIGNS_TO_PROCESS = [
-        # "alligator",
+        "alligator",
         # "duck",
         # "elephant",
         # "giraffe",
-        "helicopter",
+        # "helicopter",
         # "lion",
         # "piano",
-        "refrigerator",
+        # "refrigerator",
         # "scissors",
-        "shower",
+        # "shower",
         # "snack",
         # "tiger",
-        "tree",
+        # "tree",
         # "vacuum",
         # "water",
         # "wolf",
@@ -945,7 +1056,7 @@ def main():
         # "hello",
         # "bye"
     ]
-    MAX_FILES_PER_SIGN = 1000
+    MAX_FILES_PER_SIGN = 5
     TARGET_FRAMES = 50
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
