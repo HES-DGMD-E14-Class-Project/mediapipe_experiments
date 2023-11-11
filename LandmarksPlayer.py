@@ -307,6 +307,13 @@ class VideoPlayer(tk.Toplevel):
             by=["frame", "landmark_index"]
         )
 
+        # Create a mapping from dataset frame numbers to a 0-based index
+        frame_numbers = self.df_landmarks['frame'].unique()
+        self.frame_mapping = {frame_num: index for index, frame_num in enumerate(frame_numbers)}
+
+        # Total frames is the count of unique frames
+        self.total_frames = len(frame_numbers)
+
         unique_types = self.df_landmarks["type"].unique()
         print("Unique Landmark types in dataset:", unique_types)
 
@@ -331,7 +338,7 @@ class VideoPlayer(tk.Toplevel):
         self.frame_slider = ttk.Scale(
             self,
             from_=0,
-            to=self.total_frames - 1,
+            to=self.total_frames,
             orient="horizontal",
             command=self.update_frame,
         )
@@ -441,9 +448,12 @@ class VideoPlayer(tk.Toplevel):
 
     def display_frame(self):
         frame_width, frame_height = 500, 500
-        frame_landmarks = self.df_landmarks[
-            self.df_landmarks["frame"] == self.frame_number
-        ]
+
+        # Use the mapping to get the actual frame number from the dataset
+        dataset_frame_number = list(self.frame_mapping.keys())[self.frame_number]
+
+        frame_landmarks = self.df_landmarks[self.df_landmarks["frame"] == dataset_frame_number]
+
         frame = 255 * np.ones(
             (frame_height, frame_width, 3), dtype=np.uint8
         )  # white background
@@ -487,8 +497,10 @@ class VideoPlayer(tk.Toplevel):
 
         self.video_frame.config(image=photo)
         self.video_frame.image = photo
+
+        # Update the frame label to show both player position and actual frame number
         self.frame_label.config(
-            text=f"Frame {self.frame_number + 1}/{self.total_frames}"
+            text=f"{self.frame_number + 1}/{self.total_frames} - frame: {dataset_frame_number}"
         )
 
     def update_frame(self, value):
@@ -557,7 +569,7 @@ class App:
 
         selected_file = self.path_map[selected_relative_path]
         df_landmarks = pd.read_parquet(selected_file)
-        total_frames = df_landmarks["frame"].max() + 1
+        total_frames = df_landmarks["frame"].nunique()
 
         VideoPlayer(self.root, selected_file, total_frames)
 
