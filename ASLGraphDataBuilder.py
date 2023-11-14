@@ -64,7 +64,7 @@ class ASLGraphDataBuilder:
         :return: The dataframe with empty frames removed.
         """
         df = df.groupby("frame").filter(
-            lambda group: group[["x", "y"]].notna().any().any()
+            lambda group: group[["x", "y", "z"]].notna().any().any()
         )
         return df
 
@@ -176,7 +176,7 @@ class ASLGraphDataBuilder:
             frames_configuration = df[["frame", "arms_configuration"]].drop_duplicates()
             df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
             df_filtered = df_filtered[
-                ["row_id", "landmark_index", "x", "y", "frame", "type"]
+                ["row_id", "landmark_index", "x", "y", "z", "frame", "type"]
             ]
             # Merge the arms_configuration back into the filtered DataFrame
             df_filtered = df_filtered.merge(
@@ -185,7 +185,7 @@ class ASLGraphDataBuilder:
         else:
             df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
             df_filtered = df_filtered[
-                ["row_id", "landmark_index", "x", "y", "frame", "type"]
+                ["row_id", "landmark_index", "x", "y", "z", "frame", "type"]
             ]
 
         return df_filtered
@@ -198,30 +198,23 @@ class ASLGraphDataBuilder:
         :return: The dataframe with NaN values handled.
         """
         df = self._interpolate_landmarks(df)
-        df.dropna(subset=["x", "y"], inplace=True)
+        df.dropna(subset=["x", "y", "z"], inplace=True)
         return df
 
     def _interpolate_landmarks(self, df):
         """
-        Interpolates missing values for each landmark type in the dataframe.
+        Fills missing values for each landmark type in the dataframe by carrying forward the last known value.
 
-        :param df: The dataframe to interpolate values in.
-        :return: The dataframe with interpolated values.
+        :param df: The dataframe to fill values in.
+        :return: The dataframe with filled values.
         """
         for landmark_type in df["type"].unique():
             mask = df["type"] == landmark_type
 
-            df.loc[mask, "x"] = df.loc[mask, "x"].interpolate(
-                method="linear", limit_direction="both"
-            )
-            df.loc[mask, "y"] = df.loc[mask, "y"].interpolate(
-                method="linear", limit_direction="both"
-            )
-
-            mean_x = df.loc[mask, "x"].mean()
-            mean_y = df.loc[mask, "y"].mean()
-            df.loc[mask, "x"] = df.loc[mask, "x"].fillna(mean_x)
-            df.loc[mask, "y"] = df.loc[mask, "y"].fillna(mean_y)
+            # Carry forward the last known value
+            df.loc[mask, "x"] = df.loc[mask, "x"].ffill().bfill()
+            df.loc[mask, "y"] = df.loc[mask, "y"].ffill().bfill()
+            df.loc[mask, "z"] = df.loc[mask, "z"].ffill().bfill()
 
         return df
 
@@ -309,6 +302,7 @@ class ASLGraphDataBuilder:
 
         interpolated_x = []
         interpolated_y = []
+        interpolated_z = []
         landmark_indices = []
         types = []
         frames = []
@@ -339,6 +333,10 @@ class ASLGraphDataBuilder:
                     (1 - alpha) * lower_frame_data["y"].values[0]
                     + alpha * upper_frame_data["y"].values[0]
                 )
+                interpolated_z.append(
+                    (1 - alpha) * lower_frame_data["z"].values[0]
+                    + alpha * upper_frame_data["z"].values[0]
+                )
                 landmark_indices.append(landmark_index)
                 types.append(lower_frame_data["type"].values[0])
                 frames.append(i)
@@ -349,6 +347,7 @@ class ASLGraphDataBuilder:
                 "landmark_index": landmark_indices,
                 "x": interpolated_x,
                 "y": interpolated_y,
+                "z": interpolated_z,
                 "type": types,
             }
         )
@@ -439,21 +438,31 @@ class ASLGraphDataBuilder:
         """
         return np.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
-    def _calculate_angle(self, point1, point2, point3):
+    def _calculate_angle(self, p1, p2, p3):
         """
         Calculates the angle between three points.
 
-        :param point1: The first point.
-        :param point2: The second point (vertex of the angle).
-        :param point3: The third point.
+        :param p1: The first point.
+        :param p2: The second point (vertex of the angle).
+        :param p3: The third point.
         :return: The angle in degrees.
         """
-        vector1 = [point1[0] - point2[0], point1[1] - point2[1]]
-        vector2 = [point3[0] - point2[0], point3[1] - point2[1]]
-        dot_product = vector1[0] * vector2[0] + vector1[1] * vector2[1]
-        magnitude1 = np.sqrt(vector1[0] ** 2 + vector1[1] ** 2)
-        magnitude2 = np.sqrt(vector2[0] ** 2 + vector2[1] ** 2)
-        angle = np.arccos(dot_product / (magnitude1 * magnitude2))
+        a = np.array(p1)
+        b = np.array(p2)
+        c = np.array(p3)
+
+        ba = a - b
+        bc = c - b
+
+        # Check if norms of vectors are non-zero
+        norm_ba = np.linalg.norm(ba)
+        norm_bc = np.linalg.norm(bc)
+        if norm_ba == 0 or norm_bc == 0:
+            return np.nan  # Return NaN if one of the vectors is a zero vector
+
+        cosine_angle = np.dot(ba, bc) / (norm_ba * norm_bc)
+        angle = np.arccos(cosine_angle)
+
         return np.degrees(angle)
 
     def _calculate_palm_orientation(self, wrist, thumb_tip, pinky_tip):
@@ -525,26 +534,26 @@ class ASLGraphDataBuilder:
                 "ring": [0, 16],
                 "pinky": [0, 20],
             }.items():
-                base = landmarks[0]
-                tip = landmarks[1]
+                base_index = landmarks[0]
+                tip_index = landmarks[1]
 
                 angle_name = f"{hand}_{finger}_orientation_angle"
-                df[angle_name] = np.nan
+                df[angle_name] = np.nan  # Initialize with NaN
 
                 for frame in df["frame"].unique():
                     frame_data = df[(df["frame"] == frame) & (df["type"] == hand)]
 
-                    base_landmark = frame_data[frame_data["landmark_index"] == base][
-                        ["x", "y"]
-                    ].values
-                    tip_landmark = frame_data[frame_data["landmark_index"] == tip][
-                        ["x", "y"]
-                    ].values
+                    base_landmark = frame_data[
+                        frame_data["landmark_index"] == base_index
+                    ][["x", "y", "z"]].values
+                    tip_landmark = frame_data[
+                        frame_data["landmark_index"] == tip_index
+                    ][["x", "y", "z"]].values
 
                     if base_landmark.size > 0 and tip_landmark.size > 0:
                         base_landmark = base_landmark[0]
                         tip_landmark = tip_landmark[0]
-                        angle = self._calculate_orientation_angle(
+                        angle = self._calculate_orientation_angle_3d(
                             base_landmark, tip_landmark
                         )
                         df.loc[
@@ -552,6 +561,34 @@ class ASLGraphDataBuilder:
                         ] = angle
 
         return df
+
+    def _calculate_orientation_angle_3d(self, point_base, point_tip):
+        # Define the reference vector (e.g., along the x-axis)
+        reference_vector = np.array([1, 0, 0])
+
+        # Create vectors from the points
+        finger_vector = np.array(point_tip) - np.array(point_base)
+
+        # Check if the norm of the finger vector is non-zero
+        norm_finger_vector = np.linalg.norm(finger_vector)
+        if norm_finger_vector == 0:
+            return np.nan  # Return NaN if finger_vector is a zero vector
+
+        # Normalize the vectors
+        finger_vector_normalized = finger_vector / norm_finger_vector
+        reference_vector_normalized = reference_vector / np.linalg.norm(
+            reference_vector
+        )
+
+        # Calculate the angle using the dot product
+        dot_product = np.dot(finger_vector_normalized, reference_vector_normalized)
+        angle_rad = np.arccos(
+            np.clip(dot_product, -1.0, 1.0)
+        )  # Clip to handle numerical errors
+
+        # Convert to degrees
+        angle_deg = np.degrees(angle_rad)
+        return angle_deg
 
     def _calculate_orientation_angle(self, point1, point2):
         """
@@ -749,8 +786,9 @@ class ASLGraphDataBuilder:
         ):  # If any of the landmarks is missing, we catch the IndexError
             return False  # Can't determine if arms are gesturing to body, so we return False
 
-        # Assuming that if wrists are horizontally inside the body silhouette towards the nose, arms are gesturing to the body
-        return right_wrist_x > nose_x and left_wrist_x < nose_x
+        # Assuming that if wrists are horizontally inside the body silhouette towards the nose, arms are gesturing
+        # to the body
+        return right_wrist_x > nose_x > left_wrist_x
 
     def _calculate_wrist_features(self, df):
         """
@@ -869,14 +907,274 @@ class ASLGraphDataBuilder:
 
         return df
 
+    def _calculate_all_hand_configurations(self, df):
+        """
+        Calculate all hand configurations for each frame and add them to the dataframe.
+
+        :param df: The dataframe to process.
+        :return: The dataframe with new columns for hand configurations.
+        """
+        # Define the hand configurations as columns with default values
+        hand_config_cols = [
+            "fist_score",
+            "flat_hand_score",
+            "open_hand_score",
+            "one_finger_extended_score",
+            "two_fingers_extended_score",
+            "hook_score",
+            "cup_score",
+            "pinch_score",
+            "thumb_exposed_score",
+        ]
+
+        # Initialize the columns for hand configurations
+        for col in hand_config_cols:
+            df[col] = np.nan  # Using NaN for uninitialized scores
+
+        # Iterate over the frames and calculate the hand configurations
+        for frame_number in df["frame"].unique():
+            frame_data = df[df["frame"] == frame_number]
+
+            # For each hand, calculate the scores for all configurations
+            for hand in ["right_hand", "left_hand"]:
+                # Ensure we have data for the hand
+                if hand in frame_data["type"].values:
+                    hand_data = frame_data[frame_data["type"] == hand]
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_fist_score"
+                    ] = self._calculate_fist_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_flat_hand_score"
+                    ] = self._calculate_flat_hand_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_open_hand_score"
+                    ] = self._calculate_open_hand_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_one_finger_extended_score"
+                    ] = self._calculate_one_finger_extended_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number,
+                        f"{hand}_two_fingers_extended_score",
+                    ] = self._calculate_two_fingers_extended_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_hook_score"
+                    ] = self._calculate_hook_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_cup_score"
+                    ] = self._calculate_cup_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_pinch_score"
+                    ] = self._calculate_pinch_score(hand_data)
+                    df.loc[
+                        df["frame"] == frame_number, f"{hand}_thumb_exposed_score"
+                    ] = self._calculate_thumb_exposed_score(hand_data)
+
+        return df
+
+    # hand configuration heuristics
+
+    # The heuristic scores obtained were:
+    # - Fist Score (Milk): Approximately 0.249
+    # - Flat Hand Score (Bed): Approximately 0.00019
+    # - Open Hand Score (Hello): Approximately 0.088
+
+    # Lower bound: 0.21
+    # Upper bound: 0.26
+
+    def _calculate_fist_score(self, df):
+        # Extract palm base and all fingertips data
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
+        fingertips_data = df[df["landmark_index"].isin([4, 8, 12, 16, 20])][
+            ["x", "y", "z"]
+        ]
+        epsilon = 1e-6
+
+        if not palm_base_data.empty and not fingertips_data.empty:
+            palm_base = palm_base_data.values[0]
+            fingertips = fingertips_data.values
+            distances = np.sqrt(np.sum((fingertips - palm_base) ** 2, axis=1))
+            # Invert the distances to have higher scores for closer fingertips
+            inverted_distances = 1 / (distances + epsilon)
+            fist_score = np.mean(inverted_distances)
+        else:
+            return np.nan  # Return NaN if there's missing data
+
+        # Normalization with new limits based on observed data for a full fist
+        min_limit = np.min(
+            inverted_distances
+        )  # Min inverted distance (farthest fingertip)
+        max_limit = np.max(
+            inverted_distances
+        )  # Max inverted distance (closest fingertip)
+        # Add an epsilon to the denominator to avoid division by zero
+
+        normalized_fist_score = (fist_score - min_limit) / (
+            max_limit - min_limit + epsilon
+        )
+
+        # Scale the normalized score from 0 to 1 to be from -1 to 1
+        normalized_fist_score = 2 * normalized_fist_score - 1
+
+        return normalized_fist_score
+
+    # Lower bound: 0.00005 (or simply 0 if you want to disregard the lower bound)
+    # Upper bound: 0.0015
+    # A handshape will be classified as a "flat hand" if its variance score is less than or equal to 0.0015.
+    def _calculate_flat_hand_score(self, df):
+        fingertips_z = df[df["landmark_index"].isin([4, 8, 12, 16, 20])]["z"].values
+        return np.var(fingertips_z) if len(fingertips_z) == 5 else np.nan
+
+    # handshape could be classified as an "open hand" if its score
+    # falls within the range of approximately 0.11 to 0.14
+    def _calculate_open_hand_score(self, df):
+        fingertips = df[df["landmark_index"].isin([4, 8, 12, 16, 20])][
+            ["x", "y"]
+        ].values
+        distances = []
+        for i in range(len(fingertips)):
+            for j in range(i + 1, len(fingertips)):
+                distances.append(np.sqrt(np.sum((fingertips[i] - fingertips[j]) ** 2)))
+        return np.mean(distances)
+
+    def _calculate_one_finger_extended_score(self, df):
+        index_fingertip = df[df["landmark_index"] == 8][["x", "y", "z"]].values[0]
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
+        if not palm_base_data.empty:
+            palm_base = palm_base_data.values[0]
+            distance = np.linalg.norm(index_fingertip - palm_base)
+            return distance
+        else:
+            return np.nan  # Return NaN if there's no palm base data
+
+    def _calculate_two_fingers_extended_score(self, df):
+        index_fingertip_data = df[df["landmark_index"] == 8][["x", "y", "z"]]
+        middle_fingertip_data = df[df["landmark_index"] == 12][["x", "y", "z"]]
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
+        if (
+            not index_fingertip_data.empty
+            and not middle_fingertip_data.empty
+            and not palm_base_data.empty
+        ):
+            palm_base = palm_base_data.values[0]
+            distance_index = np.linalg.norm(index_fingertip_data.values[0] - palm_base)
+            distance_middle = np.linalg.norm(
+                middle_fingertip_data.values[0] - palm_base
+            )
+            return (distance_index + distance_middle) / 2
+        else:
+            return np.nan  # Return NaN if there's no palm base data
+
+    def _calculate_hook_score(self, df):
+        angles = []
+        for finger_base in [5, 9, 13, 17]:  # Excluding the thumb
+            fingertip_data = df[df["landmark_index"] == finger_base + 3][
+                ["x", "y", "z"]
+            ]
+            middle_joint_data = df[df["landmark_index"] == finger_base + 2][
+                ["x", "y", "z"]
+            ]
+            base_joint_data = df[df["landmark_index"] == finger_base + 1][
+                ["x", "y", "z"]
+            ]
+            if (
+                not fingertip_data.empty
+                and not middle_joint_data.empty
+                and not base_joint_data.empty
+            ):
+                fingertip = fingertip_data.values[0]
+                middle_joint = middle_joint_data.values[0]
+                base_joint = base_joint_data.values[0]
+                angle = self._calculate_angle(fingertip, middle_joint, base_joint)
+                angles.append(angle)
+        return np.mean(angles) if angles else np.nan
+
+    def _calculate_cup_score(self, df):
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
+        if not palm_base_data.empty:
+            palm_base = palm_base_data.values[0]
+            fingertip_distances = [
+                np.linalg.norm(
+                    df[df["landmark_index"] == i][["x", "y", "z"]].values[0] - palm_base
+                )
+                for i in [4, 8, 12, 16, 20]
+            ]  # Fingertips indices
+            return np.std(fingertip_distances)
+        else:
+            return np.nan
+
+    def _calculate_pinch_score(self, df):
+        thumb_tip_data = df[df["landmark_index"] == 4][["x", "y", "z"]]
+        if thumb_tip_data.empty:
+            return np.nan
+
+        thumb_tip = thumb_tip_data.values[0]
+        fingertip_distances = []
+        for fingertip_index in [8, 12, 16, 20]:  # Fingertips indices
+            fingertip_data = df[df["landmark_index"] == fingertip_index][
+                ["x", "y", "z"]
+            ]
+            if not fingertip_data.empty:
+                fingertip = fingertip_data.values[0]
+                distance = np.linalg.norm(fingertip - thumb_tip)
+                fingertip_distances.append(distance)
+        return np.min(fingertip_distances) if fingertip_distances else np.nan
+
+    def _calculate_thumb_exposed_score(self, df):
+        thumb_tip_data = df[df["landmark_index"] == 4][["x", "y", "z"]]
+        thumb_cmc_data = df[df["landmark_index"] == 1][["x", "y", "z"]]
+        wrist_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
+
+        if (
+            not thumb_tip_data.empty
+            and not thumb_cmc_data.empty
+            and not wrist_data.empty
+        ):
+            thumb_tip = thumb_tip_data.values[0]
+            thumb_cmc = thumb_cmc_data.values[0]
+            wrist = wrist_data.values[0]
+
+            # Distance between thumb tip and CMC
+            thumb_dist = np.linalg.norm(thumb_tip - thumb_cmc)
+            # Calculate angle between thumb tip, CMC, and wrist for thumb exposure
+            thumb_angle = self._calculate_angle(thumb_tip, thumb_cmc, wrist)
+            # Combine distance and angle to calculate the thumb exposure score
+            thumb_exposure_score = thumb_dist * thumb_angle
+
+            # Normalize the score using a suitable range for the combined score
+            min_limit = 0  # Assuming minimum exposure score
+            max_limit = np.max(
+                [thumb_dist * 180, 1]
+            )  # Max possible score for fully extended thumb
+            normalized_thumb_exposure_score = (thumb_exposure_score - min_limit) / (
+                max_limit - min_limit
+            )
+            # Scale the normalized score from 0 to 1 to be from -1 to 1
+            normalized_thumb_exposure_score = 2 * normalized_thumb_exposure_score - 1
+            return normalized_thumb_exposure_score
+        else:
+            return np.nan  # Return NaN if any landmark data is missing
+
     def _format_example(self, df, parquet_file):
         """
         Formats a single example into the required output format.
 
         :param df: The dataframe representing a single example.
-        :param sign: The sign label for the example.
+        :param parquet_file: The parquet file containing the original data.
         :return: A dictionary representing the formatted example.
         """
+
+        hand_config_cols = [
+            "fist_score",
+            "flat_hand_score",
+            "open_hand_score",
+            "one_finger_extended_score",
+            "two_fingers_extended_score",
+            "hook_score",
+            "cup_score",
+            "pinch_score",
+            "thumb_exposed_score",
+        ]
+
         frames = []
         for frame_number, frame_data in df.groupby("frame"):
             frame_info = {
@@ -925,6 +1223,11 @@ class ASLGraphDataBuilder:
                             }
                         )
 
+            # Add hand configurations to spatial features for this frame
+            for col in ["right_hand_configuration", "left_hand_configuration"]:
+                if col in frame_data.columns and not frame_data[col].isnull().all():
+                    frame_info["spatial"][col] = frame_data[col].iloc[0]
+
             # Add hand features
             for hand in ["right_hand", "left_hand"]:
                 thumb_index_distance = frame_data.loc[
@@ -954,6 +1257,15 @@ class ASLGraphDataBuilder:
                     if angle_value.size > 0 and not pd.isnull(angle_value[0]):
                         frame_info["spatial"][angle_name] = angle_value[0]
 
+            # Add hand configuration scores to spatial features for this frame
+            for hand in ["right_hand", "left_hand"]:
+                for config in hand_config_cols:
+                    hand_config_column = f"{hand}_{config}"
+                    if hand_config_column in df.columns:
+                        score = frame_data[hand_config_column].iloc[0]
+                        if not pd.isnull(score):
+                            frame_info["spatial"][hand_config_column] = score
+
             # Remove the "spatial" key if it's empty
             if not frame_info["spatial"]:
                 frame_info.pop("spatial")
@@ -969,6 +1281,16 @@ class ASLGraphDataBuilder:
         """
         all_signs_data = {}
 
+        # Define the frames you want to inspect
+        debug_frames = [27, 28, 29]
+        debug_sign = "callonphone"  # Set the debug sign
+
+        # Set Pandas options to prevent truncation
+        pd.set_option("display.max_rows", None)  # Show all rows
+        pd.set_option("display.max_columns", None)  # Show all columns
+        pd.set_option("display.width", None)  # Use maximum width for displaying
+        pd.set_option("display.max_colwidth", None)  # Show full content of each column
+
         for sign in tqdm(self.signs_to_process, desc="Processing signs", unit="sign"):
             all_signs_data[sign] = {"sign": sign, "examples": []}
             parquet_files = self._filter_files_by_sign(sign)
@@ -978,7 +1300,6 @@ class ASLGraphDataBuilder:
                 df = pd.read_parquet(parquet_file)
                 df = self._remove_empty_frames(df)
                 df["sign"] = sign
-
                 df = self._extract_relevant_landmarks(df)
                 df = df.sort_values(by=["frame", "landmark_index"]).reset_index(
                     drop=True
@@ -991,8 +1312,8 @@ class ASLGraphDataBuilder:
                     print(f"Warning: '{sign}' not found in label map. Skipping...")
                     continue
 
-                df = self._drop_z_coordinate(df)
-                df = self._interpolate_frames(df)
+                # df = self._interpolate_frames(df)
+                df = self._calculate_all_hand_configurations(df)
 
                 # Calculate temporal features
                 df = self._calculate_temporal_features(df)
@@ -1003,8 +1324,9 @@ class ASLGraphDataBuilder:
                 df = self._calculate_finger_orientation_angles(df)
                 df = self._calculate_arms_configuration(df)
 
-                df = self._normalize_coordinates(df)
-                df = self._smooth_landmarks(df, window_length=5, polyorder=3)
+                # df = self._drop_z_coordinate(df)
+                # df = self._normalize_coordinates(df)
+                # df = self._smooth_landmarks(df, window_length=5, polyorder=3)
 
                 example = self._format_example(df, parquet_file)
 
@@ -1028,12 +1350,16 @@ class ASLGraphDataBuilder:
 
 def main():
     """
-    Main function to run the ASLGraphDataBuilder.
+    Main function to run the SLGraphDataBuilder.
     """
     load_dotenv()
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
     SIGNS_TO_PROCESS = [
-        "alligator",
+        # "alligator",
+        # BEGIN test
+        "callonphone",  # "good", "stop", "love", "clap", "ok", "peace"
+        "milk",
+        # END test
         # "duck",
         # "elephant",
         # "giraffe",
@@ -1056,7 +1382,7 @@ def main():
         # "hello",
         # "bye"
     ]
-    MAX_FILES_PER_SIGN = 5
+    MAX_FILES_PER_SIGN = 3
     TARGET_FRAMES = 50
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
