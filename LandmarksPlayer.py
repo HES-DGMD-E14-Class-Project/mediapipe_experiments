@@ -294,15 +294,23 @@ class VideoPlayer(tk.Toplevel):
         # If you want to include the irises, add FACEMESH_IRISES
     )
 
-    def __init__(self, master, file_path, total_frames):
+    def __init__(self, master, df_landmarks, file_path, total_frames):
         super().__init__(master)
-        self.title("Video Player")
+
+        # Extracting the filename
+        filename = os.path.basename(file_path)
+
+        # Extracting the immediate directory
+        directory = os.path.basename(os.path.dirname(file_path))
+
+        self.title(f"Video Player :: {directory}/{filename}")
         self.geometry("500x600")
         self.file_path = file_path
         self.total_frames = total_frames
         self.frame_number = 0
         self.playing = False
-        self.df_landmarks = pd.read_parquet(self.file_path)
+        self.df_landmarks = df_landmarks
+        # pd.read_parquet(self.file_path)
         self.df_landmarks = self.df_landmarks.sort_values(
             by=["frame", "landmark_index"]
         )
@@ -313,9 +321,6 @@ class VideoPlayer(tk.Toplevel):
 
         # Total frames is the count of unique frames
         self.total_frames = len(frame_numbers)
-
-        unique_types = self.df_landmarks["type"].unique()
-        print("Unique Landmark types in dataset:", unique_types)
 
         # Play/Pause Button
         self.play_var = tk.StringVar(value="▶️ Play")
@@ -571,7 +576,7 @@ class App:
         df_landmarks = pd.read_parquet(selected_file)
         total_frames = df_landmarks["frame"].nunique()
 
-        VideoPlayer(self.root, selected_file, total_frames)
+        VideoPlayer(self.root, df_landmarks, selected_file, total_frames)
 
 
 if __name__ == "__main__":
