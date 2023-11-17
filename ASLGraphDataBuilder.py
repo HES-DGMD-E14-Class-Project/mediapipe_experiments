@@ -971,16 +971,6 @@ class ASLGraphDataBuilder:
 
         return df
 
-    # hand configuration heuristics
-
-    # The heuristic scores obtained were:
-    # - Fist Score (Milk): Approximately 0.249
-    # - Flat Hand Score (Bed): Approximately 0.00019
-    # - Open Hand Score (Hello): Approximately 0.088
-
-    # Lower bound: 0.21
-    # Upper bound: 0.26
-
     def _calculate_fist_score(self, df):
         # Extract palm base and all fingertips data
         palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
@@ -1017,55 +1007,186 @@ class ASLGraphDataBuilder:
 
         return normalized_fist_score
 
-    # Lower bound: 0.00005 (or simply 0 if you want to disregard the lower bound)
-    # Upper bound: 0.0015
-    # A handshape will be classified as a "flat hand" if its variance score is less than or equal to 0.0015.
     def _calculate_flat_hand_score(self, df):
         fingertips_z = df[df["landmark_index"].isin([4, 8, 12, 16, 20])]["z"].values
-        return np.var(fingertips_z) if len(fingertips_z) == 5 else np.nan
+        if len(fingertips_z) == 5:
+            variance_z = np.var(fingertips_z)
+            # Normalize the variance to have a higher score for lower variance
+            # Assuming the observed maximum variance for a non-flat hand is a pre-determined value
+            max_variance = 0.05  # This is an example value and should be adjusted based on your data
+            flat_hand_score = max(0, 1 - variance_z / max_variance)
+            # Scale from 0 to 1 to -1 to 1
+            normalized_flat_hand_score = 2 * flat_hand_score - 1
+            return normalized_flat_hand_score
+        else:
+            return np.nan  # Return NaN if not all fingertips are present
 
-    # handshape could be classified as an "open hand" if its score
-    # falls within the range of approximately 0.11 to 0.14
     def _calculate_open_hand_score(self, df):
         fingertips = df[df["landmark_index"].isin([4, 8, 12, 16, 20])][
             ["x", "y"]
         ].values
-        distances = []
-        for i in range(len(fingertips)):
-            for j in range(i + 1, len(fingertips)):
-                distances.append(np.sqrt(np.sum((fingertips[i] - fingertips[j]) ** 2)))
-        return np.mean(distances)
+        if len(fingertips) == 5:
+            distances = []
+            for i in range(len(fingertips)):
+                for j in range(i + 1, len(fingertips)):
+                    distances.append(np.linalg.norm(fingertips[i] - fingertips[j]))
+            average_distance = np.mean(distances)
+            # Normalize the average distance to have a higher score for greater distances
+            # Assuming the observed maximum average distance for a fully open hand is a pre-determined value
+            max_distance = 0.3  # This is an example value and should be adjusted based on your data
+            open_hand_score = min(1, average_distance / max_distance)
+            # Scale from 0 to 1 to -1 to 1
+            normalized_open_hand_score = 2 * open_hand_score - 1
+            return normalized_open_hand_score
+        else:
+            return np.nan  # Return NaN if not all fingertips are present
+
+    # def _calculate_one_finger_extended_score(self, df):
+    #     fingertips_data = df[df["landmark_index"].isin([8, 12, 16, 20])][
+    #         ["x", "y", "z"]
+    #     ].values
+    #     palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]].values
+    #     if fingertips_data.shape[0] == 4 and palm_base_data.size == 3:
+    #         palm_base = palm_base_data[0]
+    #         # Calculate the extension score for each finger
+    #         extension_scores = [
+    #             self._calculate_finger_extension_score(finger_tip, palm_base)
+    #             for finger_tip in fingertips_data
+    #         ]
+    #         # Count the number of fingers that are considered extended
+    #         extended_fingers_count = sum(
+    #             score > 0.5 for score in extension_scores
+    #         )  # threshold can be adjusted
+    #         # Score is 1 if exactly one finger is extended, diminishes as more are extended
+    #         score = 1 - abs(1 - extended_fingers_count)
+    #         return 2 * score - 1
+    #     else:
+    #         return np.nan  # Return NaN if there's incomplete data
+
+    # def _calculate_two_fingers_extended_score(self, df):
+    #     fingertips_data = df[df["landmark_index"].isin([8, 12, 16, 20])][
+    #         ["x", "y", "z"]
+    #     ].values
+    #     palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]].values
+    #     if fingertips_data.shape[0] == 4 and palm_base_data.size == 3:
+    #         palm_base = palm_base_data[0]
+    #         # Calculate the extension score for each finger
+    #         extension_scores = [
+    #             self._calculate_finger_extension_score(finger_tip, palm_base)
+    #             for finger_tip in fingertips_data
+    #         ]
+    #         # Count the number of fingers that are considered extended
+    #         extended_fingers_count = sum(
+    #             score > 0.5 for score in extension_scores
+    #         )  # threshold can be adjusted
+    #         # Score is 1 if exactly two fingers are extended, diminishes as more or fewer are extended
+    #         score = 1 - abs(2 - extended_fingers_count)
+    #         return 2 * score - 1
+    #     else:
+    #         return np.nan  # Return NaN if there's incomplete data
+
+    # def _calculate_finger_extension_score(self, finger_tip, palm_base):
+    #     """
+    #     Calculate the extension score for a single finger.
+    #     Score ranges from -1 (not extended) to +1 (fully extended).
+    #     """
+    #     # You'll need to define these values based on your data
+    #     # Placeholder values
+    #     fully_bent_distance = (
+    #         0.05  # This value should be the average distance for a bent finger
+    #     )
+    #     fully_extended_distance = (
+    #         0.25  # This value should be the average distance for an extended finger
+    #     )
+
+    #     distance = np.linalg.norm(finger_tip - palm_base)
+
+    #     # Normalize the distance to a score of -1 to 1
+    #     if distance < fully_bent_distance:
+    #         return -1
+    #     elif distance > fully_extended_distance:
+    #         return 1
+    #     else:
+    #         # Scale the distance between the fully bent and extended distances
+    #         return (
+    #             2
+    #             * (
+    #                 (distance - fully_bent_distance)
+    #                 / (fully_extended_distance - fully_bent_distance)
+    #             )
+    #             - 1
+    #         )
+
+    def _calculate_finger_extension_score(self, finger_tip, palm_base):
+        """
+        Calculate the extension score for a single finger.
+        Score ranges from -1 (not extended) to +1 (fully extended).
+        """
+        fully_bent_distance = 0.05  # Placeholder for a fully bent finger
+        fully_extended_distance = 0.25  # Placeholder for a fully extended finger
+
+        distance = np.linalg.norm(finger_tip - palm_base)
+
+        # Normalize the distance to a score of -1 to 1
+        if distance < fully_bent_distance:
+            return -1
+        elif distance > fully_extended_distance:
+            return 1
+        else:
+            return (
+                2
+                * (
+                    (distance - fully_bent_distance)
+                    / (fully_extended_distance - fully_bent_distance)
+                )
+                - 1
+            )
 
     def _calculate_one_finger_extended_score(self, df):
-        index_fingertip = df[df["landmark_index"] == 8][["x", "y", "z"]].values[0]
-        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
-        if not palm_base_data.empty:
-            palm_base = palm_base_data.values[0]
-            distance = np.linalg.norm(index_fingertip - palm_base)
-            return distance
+        fingertips_data = df[df["landmark_index"].isin([8, 12, 16, 20])][
+            ["x", "y", "z"]
+        ].values
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]].values
+        if fingertips_data.shape[0] == 4 and palm_base_data.size == 3:
+            palm_base = palm_base_data[0]
+            extension_scores = [
+                self._calculate_finger_extension_score(finger_tip, palm_base)
+                for finger_tip in fingertips_data
+            ]
+            extended_fingers_count = sum(
+                score > 0 for score in extension_scores
+            )  # Adjusted threshold
+            return (
+                1 if extended_fingers_count == 1 else -1
+            )  # 1 for exactly one extended finger
         else:
-            return np.nan  # Return NaN if there's no palm base data
+            return np.nan  # Incomplete data
 
     def _calculate_two_fingers_extended_score(self, df):
-        index_fingertip_data = df[df["landmark_index"] == 8][["x", "y", "z"]]
-        middle_fingertip_data = df[df["landmark_index"] == 12][["x", "y", "z"]]
-        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
-        if (
-            not index_fingertip_data.empty
-            and not middle_fingertip_data.empty
-            and not palm_base_data.empty
-        ):
-            palm_base = palm_base_data.values[0]
-            distance_index = np.linalg.norm(index_fingertip_data.values[0] - palm_base)
-            distance_middle = np.linalg.norm(
-                middle_fingertip_data.values[0] - palm_base
-            )
-            return (distance_index + distance_middle) / 2
+        fingertips_data = df[df["landmark_index"].isin([8, 12, 16, 20])][
+            ["x", "y", "z"]
+        ].values
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]].values
+        if fingertips_data.shape[0] == 4 and palm_base_data.size == 3:
+            palm_base = palm_base_data[0]
+            extension_scores = [
+                self._calculate_finger_extension_score(finger_tip, palm_base)
+                for finger_tip in fingertips_data
+            ]
+            extended_fingers_count = sum(
+                score > 0 for score in extension_scores
+            )  # Adjusted threshold
+            return (
+                1 if extended_fingers_count == 2 else -1
+            )  # 1 for exactly two extended fingers
         else:
-            return np.nan  # Return NaN if there's no palm base data
+            return np.nan  # Incomplete data
 
     def _calculate_hook_score(self, df):
         angles = []
+        finger_distances = []
+        thumb_influence = self._thumb_influence(df)
+
         for finger_base in [5, 9, 13, 17]:  # Excluding the thumb
             fingertip_data = df[df["landmark_index"] == finger_base + 3][
                 ["x", "y", "z"]
@@ -1077,30 +1198,184 @@ class ASLGraphDataBuilder:
                 ["x", "y", "z"]
             ]
             if (
-                not fingertip_data.empty
-                and not middle_joint_data.empty
-                and not base_joint_data.empty
+                fingertip_data.size == 3
+                and middle_joint_data.size == 3
+                and base_joint_data.size == 3
             ):
                 fingertip = fingertip_data.values[0]
                 middle_joint = middle_joint_data.values[0]
                 base_joint = base_joint_data.values[0]
                 angle = self._calculate_angle(fingertip, middle_joint, base_joint)
                 angles.append(angle)
-        return np.mean(angles) if angles else np.nan
+                finger_distances.extend(self._calculate_finger_distances(df, fingertip))
+
+        # Adjust the sensitivity of the hook score
+        mean_angle = np.mean(angles)
+        adjusted_hook_score = self._scale_angle_to_score(
+            mean_angle, min_angle=10, max_angle=90
+        )
+
+        # Incorporate finger spacing into the score
+        avg_finger_distance = np.mean(finger_distances)
+        spacing_factor = max(
+            0, 1 - avg_finger_distance / 0.15
+        )  # Adjust 0.15 based on data
+
+        # Combine thumb influence, adjusted hook score, and spacing factor
+        combined_score = (
+            (0.4 * thumb_influence)
+            + (0.4 * adjusted_hook_score)
+            + (0.2 * spacing_factor)
+        )
+
+        # Normalize and scale the score to be between -1 and 1
+        normalized_hook_score = max(-1, min(1, 2 * combined_score - 1))
+        return normalized_hook_score
+
+    def _thumb_influence(self, df):
+        thumb_tip_data = df[df["landmark_index"] == 4][["x", "y", "z"]]
+        palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
+
+        if not thumb_tip_data.empty and not palm_base_data.empty:
+            thumb_tip = thumb_tip_data.values[0]
+            palm_base = palm_base_data.values[0]
+            distance = np.linalg.norm(thumb_tip - palm_base)
+
+            # Adjust these thresholds based on data
+            max_distance_for_influence = 0.3
+            min_distance_for_influence = 0.1
+
+            if distance < min_distance_for_influence:
+                return 1  # Maximum thumb influence
+            elif distance > max_distance_for_influence:
+                return 0  # No thumb influence
+            else:
+                # Scale the influence linearly based on the distance
+                return 1 - (
+                    (distance - min_distance_for_influence)
+                    / (max_distance_for_influence - min_distance_for_influence)
+                )
+        else:
+            return 0
+
+    def _calculate_finger_distances(self, df, reference_fingertip):
+        distances = []
+        for fingertip_index in [8, 12, 16, 20]:  # Indices of the other fingertips
+            fingertip_data = df[df["landmark_index"] == fingertip_index][
+                ["x", "y", "z"]
+            ]
+            if not fingertip_data.empty:
+                fingertip = fingertip_data.values[0]
+                distance = np.linalg.norm(fingertip - reference_fingertip)
+                distances.append(distance)
+        return distances
+
+    def _evaluate_finger_curl_for_hook(self, df, palm_base, max_distance):
+        """
+        Evaluate the curvature of fingers towards the palm for hooking.
+        More sensitive to partial curls typical in a hook.
+        """
+        curl_score = 0
+        for fingertip_index in [8, 12, 16, 20]:  # Fingertips indices
+            fingertip_data = df[df["landmark_index"] == fingertip_index][
+                ["x", "y", "z"]
+            ]
+            if not fingertip_data.empty:
+                fingertip = fingertip_data.values[0]
+                distance = np.linalg.norm(fingertip - palm_base)
+                # Adjust the scoring for partial curls
+                partial_curl_score = max(0, (1 - distance / max_distance) ** 2)
+                curl_score += partial_curl_score
+        return curl_score / 4  # Normalize by the number of fingers
+
+    def _scale_angle_to_score(self, angle, min_angle=60, max_angle=90):
+        # min_angle = 60  # Adjusted min angle for a non-hooked finger
+        # max_angle = 120  # Adjusted max angle for a fully hooked finger
+
+        if angle < min_angle:
+            return -1
+        elif angle > max_angle:
+            return 1
+        else:
+            return 2 * ((angle - min_angle) / (max_angle - min_angle)) - 1
 
     def _calculate_cup_score(self, df):
         palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]]
-        if not palm_base_data.empty:
+        thumb_tip_data = df[df["landmark_index"] == 4][["x", "y", "z"]]
+        if palm_base_data.size == 3 and thumb_tip_data.size == 3:
             palm_base = palm_base_data.values[0]
-            fingertip_distances = [
-                np.linalg.norm(
-                    df[df["landmark_index"] == i][["x", "y", "z"]].values[0] - palm_base
-                )
-                for i in [4, 8, 12, 16, 20]
-            ]  # Fingertips indices
-            return np.std(fingertip_distances)
+            thumb_tip = thumb_tip_data.values[0]
+
+            # Significantly increase the maximum allowable distances
+            thumb_proximity_score = self._evaluate_thumb_proximity(
+                thumb_tip, palm_base, max_distance=0.5
+            )
+            finger_curl_score = self._evaluate_finger_curl(
+                df, palm_base, max_distance=0.5
+            )
+
+            # Heavily weight the finger closeness and curl scores
+            finger_closeness_score = self._evaluate_finger_closeness(
+                df, max_avg_distance=0.4
+            )
+
+            # Adjust the weights for component scores
+            combined_score = (
+                0.1 * thumb_proximity_score
+                + 0.45 * finger_closeness_score
+                + 0.45 * finger_curl_score
+            )
+
+            # Normalize and scale the score to be between -1 and 1
+            normalized_cup_score = max(-1, min(1, 2 * combined_score - 1))
+            return normalized_cup_score
         else:
             return np.nan
+
+    def _evaluate_thumb_proximity(self, thumb_tip, palm_base, max_distance):
+        """
+        Evaluate the proximity of the thumb to the palm base for cupping.
+        """
+        distance = np.linalg.norm(thumb_tip - palm_base)
+        return max(0, 1 - distance / max_distance)
+
+    def _evaluate_finger_curl(self, df, palm_base, max_distance):
+        """
+        Evaluate the curvature of fingers towards the palm for cupping.
+        """
+        curl_score = 0
+        for fingertip_index in [8, 12, 16, 20]:
+            fingertip_data = df[df["landmark_index"] == fingertip_index][
+                ["x", "y", "z"]
+            ]
+            if not fingertip_data.empty:
+                fingertip = fingertip_data.values[0]
+                distance = np.linalg.norm(fingertip - palm_base)
+                curl_score += max(0, 1 - distance / max_distance)
+        return curl_score / 4  # Normalize by the number of fingers
+
+    def _evaluate_finger_closeness(self, df, max_avg_distance):
+        """
+        Evaluate the closeness of fingers for cupping.
+        """
+        total_distance = 0
+        count = 0
+        for i in range(8, 20, 4):  # Fingertip indices excluding the thumb
+            fingertip_data = df[df["landmark_index"] == i][["x", "y", "z"]]
+            if fingertip_data.size == 3:
+                for j in range(i + 4, 21, 4):
+                    next_fingertip_data = df[df["landmark_index"] == j][["x", "y", "z"]]
+                    if next_fingertip_data.size == 3:
+                        next_fingertip = next_fingertip_data.values[0]
+                        fingertip = fingertip_data.values[0]
+                        distance = np.linalg.norm(fingertip - next_fingertip)
+                        total_distance += distance
+                        count += 1
+        if count > 0:
+            avg_distance = total_distance / count
+            return max(0, 1 - avg_distance / max_avg_distance)
+        else:
+            return 0
 
     def _calculate_pinch_score(self, df):
         thumb_tip_data = df[df["landmark_index"] == 4][["x", "y", "z"]]
@@ -1108,16 +1383,57 @@ class ASLGraphDataBuilder:
             return np.nan
 
         thumb_tip = thumb_tip_data.values[0]
-        fingertip_distances = []
-        for fingertip_index in [8, 12, 16, 20]:  # Fingertips indices
+        pinch_scores = []
+
+        # Adjust proximity threshold based on your dataset
+        proximity_threshold = 0.05  # Example threshold, needs to be adjusted
+
+        for fingertip_index in [8, 12]:  # Focusing on index and middle fingers
             fingertip_data = df[df["landmark_index"] == fingertip_index][
                 ["x", "y", "z"]
             ]
             if not fingertip_data.empty:
                 fingertip = fingertip_data.values[0]
-                distance = np.linalg.norm(fingertip - thumb_tip)
-                fingertip_distances.append(distance)
-        return np.min(fingertip_distances) if fingertip_distances else np.nan
+                distance_to_thumb = np.linalg.norm(fingertip - thumb_tip)
+
+                # Adjust curl evaluation
+                curl_score = self._calculate_curl_score_for_pinch(fingertip, thumb_tip)
+
+                # Scoring based on proximity and adjusted curl
+                if distance_to_thumb < proximity_threshold:
+                    score = (1 - distance_to_thumb / proximity_threshold) + curl_score
+                else:
+                    score = 0  # No pinch if the distance is greater than the threshold
+
+                pinch_scores.append(score)
+
+        # Simple average of pinch scores for index and middle fingers
+        if pinch_scores:
+            return np.mean(pinch_scores)
+        else:
+            return np.nan
+
+    def _calculate_curl_score_for_pinch(self, fingertip, thumb_tip):
+        """
+        Calculate a specialized curl score for a finger in the context of a pinch.
+        The score should reflect how much the finger is curled towards the thumb.
+        """
+        # Example implementation: Use the distance between the fingertip and thumb tip.
+        # Smaller distance indicates a stronger pinch, resulting in a higher score.
+        distance = np.linalg.norm(fingertip - thumb_tip)
+
+        # Define a suitable threshold for your dataset.
+        max_pinch_distance = 0.05  # This is an example value, needs to be adjusted
+
+        # Calculate the score
+        if distance < max_pinch_distance:
+            # The closer the finger is to the thumb, the higher the score
+            curl_score = 1 - (distance / max_pinch_distance)
+        else:
+            # No pinch if the distance is greater than the threshold
+            curl_score = 0
+
+        return curl_score
 
     def _calculate_thumb_exposed_score(self, df):
         thumb_tip_data = df[df["landmark_index"] == 4][["x", "y", "z"]]
@@ -1356,9 +1672,17 @@ def main():
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
     SIGNS_TO_PROCESS = [
         # "alligator",
+        "animal",
+        "bird",
+        "bed",
+        "balloon",
+        "flower",
+        "cloud",
+        "table",
         # BEGIN test
         "callonphone",  # "good", "stop", "love", "clap", "ok", "peace"
         "milk",
+        "pen",
         # END test
         # "duck",
         # "elephant",
@@ -1374,7 +1698,7 @@ def main():
         # "tree",
         # "vacuum",
         # "water",
-        # "wolf",
+        "wolf",
         # "zebra",
         # "airplane",
         # "bicycle",
