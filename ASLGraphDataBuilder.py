@@ -1,10 +1,20 @@
 import os
 import json
+import cv2
 import numpy as np
 import pandas as pd
+import logging
+
 from tqdm import tqdm
 from scipy.signal import savgol_filter
 from dotenv import load_dotenv
+
+# Set up logging
+logging.basicConfig(
+    filename="asl_graph_builder.log", format="%(asctime)s %(message)s", filemode="w"
+)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 class ASLGraphDataBuilder:
@@ -31,58 +41,15 @@ class ASLGraphDataBuilder:
         self.max_files_per_sign = max_files_per_sign
         self.target_frames = target_frames
 
-        # Load the train dataframe and label map
-        self.train_df = pd.read_csv(os.path.join(self.base_dir, "train.csv"))
-
-        if not signs_to_process:
-            self.signs_to_process = self.train_df["sign"].unique().tolist()
-        else:
-            self.signs_to_process = signs_to_process
-
-        with open(
-            os.path.join(self.base_dir, "sign_to_prediction_index_map.json")
-        ) as f:
-            self.label_map = json.load(f)
-
-    def _filter_files_by_sign(self, sign):
-        """
-        Filters and returns the file paths for a given sign.
-
-        :param sign: The sign to filter files for.
-        :return: A list of file paths for the given sign.
-        """
-        sign_files = self.train_df[self.train_df["sign"] == sign]["path"].tolist()[
-            : self.max_files_per_sign
-        ]
-        return [os.path.join(self.base_dir, f) for f in sign_files]
-
-    def _remove_empty_frames(self, df):
-        """
-        Removes frames from the dataframe where all landmarks are missing.
-
-        :param df: The dataframe to remove empty frames from.
-        :return: The dataframe with empty frames removed.
-        """
-        df = df.groupby("frame").filter(
-            lambda group: group[["x", "y", "z"]].notna().any().any()
-        )
-        return df
-
-    def _extract_relevant_landmarks(self, df):
-        """
-        Filters the dataframe to only include a minimal set of relevant landmarks for facial contours.
-
-        :param df: The dataframe to filter.
-        :return: The dataframe with only relevant landmarks.
-        """
+        # Landmarks specified in _extract_relevant_landmarks
         # Pose landmarks from the waist up (excluding wrists, hands, and face - just the nose)
-        pose_landmarks_waist_up_no_face = [0, 9, 10, 11, 12, 13, 14]
+        self.pose_landmarks_waist_up_no_face = [0, 9, 10, 11, 12, 13, 14]
 
         # Minimal set of face landmarks for the outline of the face, eyes, and lips
         # For the face oval, keep the transition points from sides of the face, corners,
         # points where the face starts curving toward the chin, and some points for the chin.
         # For eyes and lips, keep the corners and skip every other point.
-        face_landmarks_minimal = {
+        self.face_landmarks_minimal = {
             # Reduced face oval (keeping side points, corners, and a few chin points)
             10,
             338,
@@ -159,13 +126,59 @@ class ASLGraphDataBuilder:
             324,
         }
 
-        relevant_landmarks = [
-            *["pose-" + str(i) for i in pose_landmarks_waist_up_no_face],
-            *["face-" + str(i) for i in face_landmarks_minimal],
+        self.relevant_landmarks = {
+            *["pose-" + str(i) for i in self.pose_landmarks_waist_up_no_face],
+            *["face-" + str(i) for i in self.face_landmarks_minimal],
             *["right_hand-" + str(i) for i in range(21)],
             *["left_hand-" + str(i) for i in range(21)],
-        ]
+        }
 
+        self.expected_landmark_count = len(self.relevant_landmarks)
+
+        # Load the train dataframe and label map
+        self.train_df = pd.read_csv(os.path.join(self.base_dir, "train.csv"))
+
+        if not signs_to_process:
+            self.signs_to_process = self.train_df["sign"].unique().tolist()
+        else:
+            self.signs_to_process = signs_to_process
+
+        with open(
+            os.path.join(self.base_dir, "sign_to_prediction_index_map.json")
+        ) as f:
+            self.label_map = json.load(f)
+
+    def _filter_files_by_sign(self, sign):
+        """
+        Filters and returns the file paths for a given sign.
+
+        :param sign: The sign to filter files for.
+        :return: A list of file paths for the given sign.
+        """
+        sign_files = self.train_df[self.train_df["sign"] == sign]["path"].tolist()[
+            : self.max_files_per_sign
+        ]
+        return [os.path.join(self.base_dir, f) for f in sign_files]
+
+    def _remove_empty_frames(self, df):
+        """
+        Removes frames from the dataframe where all landmarks are missing.
+
+        :param df: The dataframe to remove empty frames from.
+        :return: The dataframe with empty frames removed.
+        """
+        df = df.groupby("frame").filter(
+            lambda group: group[["x", "y", "z"]].notna().any().any()
+        )
+        return df
+
+    def _extract_relevant_landmarks(self, df):
+        """
+        Filters the dataframe to only include a minimal set of relevant landmarks for facial contours.
+
+        :param df: The dataframe to filter.
+        :return: The dataframe with only relevant landmarks.
+        """
         # Filter the DataFrame
         df["landmark_type"] = df["row_id"].apply(lambda x: x.split("-")[1])
         df["landmark_index"] = df["row_id"].apply(lambda x: int(x.split("-")[2]))
@@ -174,19 +187,25 @@ class ASLGraphDataBuilder:
         # Include 'arms_configuration' in the filtered DataFrame
         if "arms_configuration" in df.columns:
             frames_configuration = df[["frame", "arms_configuration"]].drop_duplicates()
-            df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
+            df_filtered = df[df["landmark_id"].isin(self.relevant_landmarks)]
             df_filtered = df_filtered[
-                ["row_id", "landmark_index", "x", "y", "z", "frame", "type"]
+                ["landmark_id", "row_id", "landmark_index", "x", "y", "z", "frame", "type"]
             ]
             # Merge the arms_configuration back into the filtered DataFrame
             df_filtered = df_filtered.merge(
                 frames_configuration, on="frame", how="left"
             )
         else:
-            df_filtered = df[df["landmark_id"].isin(relevant_landmarks)]
+            df_filtered = df[df["landmark_id"].isin(self.relevant_landmarks)]
             df_filtered = df_filtered[
-                ["row_id", "landmark_index", "x", "y", "z", "frame", "type"]
+                ["landmark_id", "row_id", "landmark_index", "x", "y", "z", "frame", "type"]
             ]
+
+        # # Debugging: Checking available landmarks after filtering
+        # for frame in df_filtered['frame'].unique():
+        #     frame_data = df_filtered[df_filtered['frame'] == frame]
+        #     filtered_landmarks = frame_data['landmark_id'].unique()
+        #     print(f"Frame {frame}: Remaining landmarks after filtering: {filtered_landmarks}")
 
         return df_filtered
 
@@ -280,91 +299,130 @@ class ASLGraphDataBuilder:
         df.sort_values(by=["frame", "landmark_index"], inplace=True)
 
         if num_frames < self.target_frames:
-            return self._increase_frames(df)
+            # print("Processing data...")
+            initial_frame_count = df["frame"].nunique()
+            idf = self._increase_frames(df)
+            final_frame_count = idf["frame"].nunique()
+            print(f"FRAME COUNTS  - BEFORE: {initial_frame_count} - AFTER: {final_frame_count}")
+            return idf
+            # return df
         elif num_frames > self.target_frames:
             return self._reduce_frames(df)
 
         return df
 
     def _increase_frames(self, df):
-        """
-        Increases the number of frames in the dataframe to match the target number of frames.
+        current_frames = df['frame'].nunique()
 
-        :param df: The dataframe to increase frames in.
-        :return: The dataframe with increased frames.
-        """
-        num_frames = df["frame"].nunique()
-        num_landmarks = df["landmark_index"].nunique()
-        target_frames = np.linspace(0, num_frames - 1, self.target_frames)
-        lower_frames = np.floor(target_frames).astype(int)
-        upper_frames = np.ceil(target_frames).astype(int)
-        alphas = target_frames - lower_frames
+        if current_frames >= self.target_frames:
+            return df  # No need to increase frames if already sufficient
 
-        interpolated_x = []
-        interpolated_y = []
-        interpolated_z = []
-        landmark_indices = []
-        types = []
-        frames = []
+        # Calculate the number of interpolation steps needed
+        steps_needed = np.ceil((self.target_frames - current_frames) / (current_frames - 1)).astype(int)
 
-        for i in range(self.target_frames):
-            lower_frame = int(lower_frames[i])
-            upper_frame = int(upper_frames[i])
-            alpha = alphas[i]
+        interpolated_rows = []
+        new_frame_number = current_frames  # Start numbering new frames after existing frames
 
-            for landmark_index in range(num_landmarks):
-                lower_frame_data = df[
-                    (df["frame"] == lower_frame)
-                    & (df["landmark_index"] == landmark_index)
-                ]
-                upper_frame_data = df[
-                    (df["frame"] == upper_frame)
-                    & (df["landmark_index"] == landmark_index)
-                ]
+        for frame_number in range(current_frames - 1):
+            frame_data_start = df[df['frame'] == frame_number]
+            frame_data_end = df[df['frame'] == frame_number + 1]
 
-                if lower_frame_data.empty or upper_frame_data.empty:
-                    continue
+            # Check if frame data lengths match and contain all landmarks
+            if len(frame_data_start) != len(frame_data_end):
+                raise ValueError(f"Mismatch in landmark counts between frames {frame_number} and {frame_number + 1}")
 
-                interpolated_x.append(
-                    (1 - alpha) * lower_frame_data["x"].values[0]
-                    + alpha * upper_frame_data["x"].values[0]
+            for step in range(1, steps_needed + 1):
+                t = step / steps_needed
+                for landmark_index in range(len(frame_data_start)):
+                    row_start = frame_data_start.iloc[landmark_index]
+                    row_end = frame_data_end.iloc[landmark_index]
+                    # Calculate interpolated values
+                    interpolated_row = {
+                        "row_id": row_start.row_id,
+                        "landmark_index": row_start.landmark_index,
+                        "x": row_start.x + t * (row_end.x - row_start.x),
+                        "y": row_start.y + t * (row_end.y - row_start.y),
+                        "z": row_start.z + t * (row_end.z - row_start.z),
+                        "frame": new_frame_number,
+                        "type": row_start.type,
+                        "label": row_start.label,
+                    }
+                    interpolated_rows.append(interpolated_row)
+                new_frame_number += 1  # Increment the frame number for the next set of interpolated frames
+
+        df_interpolated = pd.DataFrame(interpolated_rows)
+
+        df_combined = pd.concat([df, df_interpolated], ignore_index=True)
+        df_combined.sort_values(by=['frame'], inplace=True)
+
+        # Remove the frame renumbering to keep original and interpolated frame numbers
+        # df_combined['frame'] = range(len(df_combined))
+
+        if df_combined['frame'].nunique() > self.target_frames:
+            # Select evenly spaced frames
+            selected_frames = np.round(np.linspace(0, df_combined['frame'].max(), self.target_frames, endpoint=True)).astype(int)
+            df_combined = df_combined[df_combined['frame'].isin(selected_frames)]
+
+        # Ensure landmark consistency
+        df_combined = self._ensure_landmark_consistency(df_combined)
+
+        return df_combined
+
+
+    def _ensure_landmark_consistency(self, df):
+        placeholder_landmark = {"x": -1, "y": -1, "z": 0}
+
+        for frame_number in df["frame"].unique():
+            frame_data = df[df["frame"] == frame_number]
+            existing_landmarks = set(
+                f"{row['type']}-{row['landmark_index']}"
+                for _, row in frame_data.iterrows()
+            )
+            missing_landmarks = self.relevant_landmarks - existing_landmarks
+
+            # Debugging: Print missing landmarks
+            if missing_landmarks:
+                print(f"Frame {frame_number}: Missing landmarks: {missing_landmarks}")
+
+            missing_landmark_data = [
+                {
+                    "frame": frame_number,
+                    "type": lm.split("-")[0],
+                    "landmark_index": int(lm.split("-")[1]),
+                    **placeholder_landmark,
+                    "label": "placeholder",
+                }
+                for lm in missing_landmarks
+            ]
+
+            if missing_landmark_data:
+                df = pd.concat(
+                    [df, pd.DataFrame(missing_landmark_data)], ignore_index=True
                 )
-                interpolated_y.append(
-                    (1 - alpha) * lower_frame_data["y"].values[0]
-                    + alpha * upper_frame_data["y"].values[0]
-                )
-                interpolated_z.append(
-                    (1 - alpha) * lower_frame_data["z"].values[0]
-                    + alpha * upper_frame_data["z"].values[0]
-                )
-                landmark_indices.append(landmark_index)
-                types.append(lower_frame_data["type"].values[0])
-                frames.append(i)
 
-        new_df = pd.DataFrame(
-            {
-                "frame": frames,
-                "landmark_index": landmark_indices,
-                "x": interpolated_x,
-                "y": interpolated_y,
-                "z": interpolated_z,
-                "type": types,
-            }
-        )
-
-        return new_df
+        return df
 
     def _reduce_frames(self, df):
         """
         Reduces the number of frames in the dataframe to match the target number of frames.
+        Ensures landmark consistency in each frame.
 
         :param df: The dataframe to reduce frames in.
-        :return: The dataframe with reduced frames.
+        :return: The dataframe with reduced and consistent frames.
         """
         num_frames = len(df["frame"].unique())
+
+        initial_frame_count = df["frame"].nunique()
+
         frames_to_keep = np.linspace(0, num_frames - 1, self.target_frames, dtype=int)
         df = df[df["frame"].isin(frames_to_keep)].copy()
         df["frame"] = df["frame"].rank(method="dense").astype(int) - 1
+
+        # Ensure landmark consistency
+        df = self._ensure_landmark_consistency(df)
+
+        reduced_frame_count = df["frame"].nunique()
+
         return df
 
     def _calculate_hand_features(self, df):
@@ -1041,82 +1099,6 @@ class ASLGraphDataBuilder:
         else:
             return np.nan  # Return NaN if not all fingertips are present
 
-    # def _calculate_one_finger_extended_score(self, df):
-    #     fingertips_data = df[df["landmark_index"].isin([8, 12, 16, 20])][
-    #         ["x", "y", "z"]
-    #     ].values
-    #     palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]].values
-    #     if fingertips_data.shape[0] == 4 and palm_base_data.size == 3:
-    #         palm_base = palm_base_data[0]
-    #         # Calculate the extension score for each finger
-    #         extension_scores = [
-    #             self._calculate_finger_extension_score(finger_tip, palm_base)
-    #             for finger_tip in fingertips_data
-    #         ]
-    #         # Count the number of fingers that are considered extended
-    #         extended_fingers_count = sum(
-    #             score > 0.5 for score in extension_scores
-    #         )  # threshold can be adjusted
-    #         # Score is 1 if exactly one finger is extended, diminishes as more are extended
-    #         score = 1 - abs(1 - extended_fingers_count)
-    #         return 2 * score - 1
-    #     else:
-    #         return np.nan  # Return NaN if there's incomplete data
-
-    # def _calculate_two_fingers_extended_score(self, df):
-    #     fingertips_data = df[df["landmark_index"].isin([8, 12, 16, 20])][
-    #         ["x", "y", "z"]
-    #     ].values
-    #     palm_base_data = df[df["landmark_index"] == 0][["x", "y", "z"]].values
-    #     if fingertips_data.shape[0] == 4 and palm_base_data.size == 3:
-    #         palm_base = palm_base_data[0]
-    #         # Calculate the extension score for each finger
-    #         extension_scores = [
-    #             self._calculate_finger_extension_score(finger_tip, palm_base)
-    #             for finger_tip in fingertips_data
-    #         ]
-    #         # Count the number of fingers that are considered extended
-    #         extended_fingers_count = sum(
-    #             score > 0.5 for score in extension_scores
-    #         )  # threshold can be adjusted
-    #         # Score is 1 if exactly two fingers are extended, diminishes as more or fewer are extended
-    #         score = 1 - abs(2 - extended_fingers_count)
-    #         return 2 * score - 1
-    #     else:
-    #         return np.nan  # Return NaN if there's incomplete data
-
-    # def _calculate_finger_extension_score(self, finger_tip, palm_base):
-    #     """
-    #     Calculate the extension score for a single finger.
-    #     Score ranges from -1 (not extended) to +1 (fully extended).
-    #     """
-    #     # You'll need to define these values based on your data
-    #     # Placeholder values
-    #     fully_bent_distance = (
-    #         0.05  # This value should be the average distance for a bent finger
-    #     )
-    #     fully_extended_distance = (
-    #         0.25  # This value should be the average distance for an extended finger
-    #     )
-
-    #     distance = np.linalg.norm(finger_tip - palm_base)
-
-    #     # Normalize the distance to a score of -1 to 1
-    #     if distance < fully_bent_distance:
-    #         return -1
-    #     elif distance > fully_extended_distance:
-    #         return 1
-    #     else:
-    #         # Scale the distance between the fully bent and extended distances
-    #         return (
-    #             2
-    #             * (
-    #                 (distance - fully_bent_distance)
-    #                 / (fully_extended_distance - fully_bent_distance)
-    #             )
-    #             - 1
-    #         )
-
     def _calculate_finger_extension_score(self, finger_tip, palm_base):
         """
         Calculate the extension score for a single finger.
@@ -1628,7 +1610,7 @@ class ASLGraphDataBuilder:
                     print(f"Warning: '{sign}' not found in label map. Skipping...")
                     continue
 
-                # df = self._interpolate_frames(df)
+                df = self._interpolate_frames(df)
                 df = self._calculate_all_hand_configurations(df)
 
                 # Calculate temporal features
@@ -1640,8 +1622,8 @@ class ASLGraphDataBuilder:
                 df = self._calculate_finger_orientation_angles(df)
                 df = self._calculate_arms_configuration(df)
 
-                # df = self._drop_z_coordinate(df)
-                # df = self._normalize_coordinates(df)
+                df = self._drop_z_coordinate(df)
+                df = self._normalize_coordinates(df)
                 # df = self._smooth_landmarks(df, window_length=5, polyorder=3)
 
                 example = self._format_example(df, parquet_file)
@@ -1673,16 +1655,16 @@ def main():
     SIGNS_TO_PROCESS = [
         # "alligator",
         "animal",
-        "bird",
-        "bed",
-        "balloon",
-        "flower",
-        "cloud",
-        "table",
+        # "bird",
+        # "bed",
+        # "balloon",
+        # "flower",
+        # "cloud",
+        # "table",
         # BEGIN test
-        "callonphone",  # "good", "stop", "love", "clap", "ok", "peace"
-        "milk",
-        "pen",
+        # "callonphone",  # "good", "stop", "love", "clap", "ok", "peace"
+        # "milk",
+        # "pen",
         # END test
         # "duck",
         # "elephant",
@@ -1698,7 +1680,7 @@ def main():
         # "tree",
         # "vacuum",
         # "water",
-        "wolf",
+        # "wolf",
         # "zebra",
         # "airplane",
         # "bicycle",
@@ -1706,8 +1688,8 @@ def main():
         # "hello",
         # "bye"
     ]
-    MAX_FILES_PER_SIGN = 3
-    TARGET_FRAMES = 50
+    MAX_FILES_PER_SIGN = 1
+    TARGET_FRAMES = 40
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
     )
