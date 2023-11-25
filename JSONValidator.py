@@ -38,7 +38,7 @@ def check_frame_counts(output_dir):
                     min_landmarks = min(file_landmarks_counts)
                     max_landmarks = max(file_landmarks_counts)
                     avg_landmarks = sum(file_landmarks_counts) / len(file_landmarks_counts)
-                    print(f"File '{filename}' stats: "
+                    print(f"File '{filename}' stats: Frame Count: {frame_count} ,"
                           f"Landmarks per frame: min={min_landmarks}, max={max_landmarks}, avg={avg_landmarks:.2f}")
                 else:
                     print(f"File '{filename}' contains no landmark data.")
@@ -57,7 +57,7 @@ def check_frame_counts(output_dir):
         else:
             min_landmarks = max_landmarks = avg_landmarks = "N/A"
 
-        print(f"{sign}: {num_examples} examples, with {len(unique_frame_counts)} different frame counts. "
+        print(f"{sign}: {num_examples} examples, with {len(unique_frame_counts)} different frame counts => {unique_frame_counts} "
               f"Landmarks per frame: min={min_landmarks}, max={max_landmarks}, avg={avg_landmarks:.2f}")
 
     # Print global statistics for landmarks across all files
