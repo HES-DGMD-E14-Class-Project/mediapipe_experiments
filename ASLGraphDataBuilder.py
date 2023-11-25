@@ -189,7 +189,16 @@ class ASLGraphDataBuilder:
             frames_configuration = df[["frame", "arms_configuration"]].drop_duplicates()
             df_filtered = df[df["landmark_id"].isin(self.relevant_landmarks)]
             df_filtered = df_filtered[
-                ["landmark_id", "row_id", "landmark_index", "x", "y", "z", "frame", "type"]
+                [
+                    "landmark_id",
+                    "row_id",
+                    "landmark_index",
+                    "x",
+                    "y",
+                    "z",
+                    "frame",
+                    "type",
+                ]
             ]
             # Merge the arms_configuration back into the filtered DataFrame
             df_filtered = df_filtered.merge(
@@ -198,7 +207,16 @@ class ASLGraphDataBuilder:
         else:
             df_filtered = df[df["landmark_id"].isin(self.relevant_landmarks)]
             df_filtered = df_filtered[
-                ["landmark_id", "row_id", "landmark_index", "x", "y", "z", "frame", "type"]
+                [
+                    "landmark_id",
+                    "row_id",
+                    "landmark_index",
+                    "x",
+                    "y",
+                    "z",
+                    "frame",
+                    "type",
+                ]
             ]
 
         # # Debugging: Checking available landmarks after filtering
@@ -299,37 +317,37 @@ class ASLGraphDataBuilder:
         df.sort_values(by=["frame", "landmark_index"], inplace=True)
 
         if num_frames < self.target_frames:
-            # print("Processing data...")
-            initial_frame_count = df["frame"].nunique()
-            idf = self._increase_frames(df)
-            final_frame_count = idf["frame"].nunique()
-            print(f"FRAME COUNTS  - BEFORE: {initial_frame_count} - AFTER: {final_frame_count}")
-            return idf
-            # return df
+            return self._increase_frames(df)
         elif num_frames > self.target_frames:
             return self._reduce_frames(df)
 
         return df
 
     def _increase_frames(self, df):
-        current_frames = df['frame'].nunique()
+        current_frames = df["frame"].nunique()
 
         if current_frames >= self.target_frames:
             return df  # No need to increase frames if already sufficient
 
         # Calculate the number of interpolation steps needed
-        steps_needed = np.ceil((self.target_frames - current_frames) / (current_frames - 1)).astype(int)
+        steps_needed = np.ceil(
+            (self.target_frames - current_frames) / (current_frames - 1)
+        ).astype(int)
 
         interpolated_rows = []
-        new_frame_number = current_frames  # Start numbering new frames after existing frames
+        new_frame_number = (
+            current_frames  # Start numbering new frames after existing frames
+        )
 
         for frame_number in range(current_frames - 1):
-            frame_data_start = df[df['frame'] == frame_number]
-            frame_data_end = df[df['frame'] == frame_number + 1]
+            frame_data_start = df[df["frame"] == frame_number]
+            frame_data_end = df[df["frame"] == frame_number + 1]
 
             # Check if frame data lengths match and contain all landmarks
             if len(frame_data_start) != len(frame_data_end):
-                raise ValueError(f"Mismatch in landmark counts between frames {frame_number} and {frame_number + 1}")
+                raise ValueError(
+                    f"Mismatch in landmark counts between frames {frame_number} and {frame_number + 1}"
+                )
 
             for step in range(1, steps_needed + 1):
                 t = step / steps_needed
@@ -353,21 +371,21 @@ class ASLGraphDataBuilder:
         df_interpolated = pd.DataFrame(interpolated_rows)
 
         df_combined = pd.concat([df, df_interpolated], ignore_index=True)
-        df_combined.sort_values(by=['frame'], inplace=True)
+        df_combined.sort_values(by=["frame"], inplace=True)
 
-        # Remove the frame renumbering to keep original and interpolated frame numbers
-        # df_combined['frame'] = range(len(df_combined))
-
-        if df_combined['frame'].nunique() > self.target_frames:
+        if df_combined["frame"].nunique() > self.target_frames:
             # Select evenly spaced frames
-            selected_frames = np.round(np.linspace(0, df_combined['frame'].max(), self.target_frames, endpoint=True)).astype(int)
-            df_combined = df_combined[df_combined['frame'].isin(selected_frames)]
+            selected_frames = np.round(
+                np.linspace(
+                    0, df_combined["frame"].max(), self.target_frames, endpoint=True
+                )
+            ).astype(int)
+            df_combined = df_combined[df_combined["frame"].isin(selected_frames)]
 
         # Ensure landmark consistency
         df_combined = self._ensure_landmark_consistency(df_combined)
 
         return df_combined
-
 
     def _ensure_landmark_consistency(self, df):
         placeholder_landmark = {"x": -1, "y": -1, "z": 0}
@@ -379,10 +397,6 @@ class ASLGraphDataBuilder:
                 for _, row in frame_data.iterrows()
             )
             missing_landmarks = self.relevant_landmarks - existing_landmarks
-
-            # Debugging: Print missing landmarks
-            if missing_landmarks:
-                print(f"Frame {frame_number}: Missing landmarks: {missing_landmarks}")
 
             missing_landmark_data = [
                 {
@@ -411,17 +425,12 @@ class ASLGraphDataBuilder:
         :return: The dataframe with reduced and consistent frames.
         """
         num_frames = len(df["frame"].unique())
-
-        initial_frame_count = df["frame"].nunique()
-
         frames_to_keep = np.linspace(0, num_frames - 1, self.target_frames, dtype=int)
         df = df[df["frame"].isin(frames_to_keep)].copy()
         df["frame"] = df["frame"].rank(method="dense").astype(int) - 1
 
         # Ensure landmark consistency
         df = self._ensure_landmark_consistency(df)
-
-        reduced_frame_count = df["frame"].nunique()
 
         return df
 
@@ -1579,10 +1588,6 @@ class ASLGraphDataBuilder:
         """
         all_signs_data = {}
 
-        # Define the frames you want to inspect
-        debug_frames = [27, 28, 29]
-        debug_sign = "callonphone"  # Set the debug sign
-
         # Set Pandas options to prevent truncation
         pd.set_option("display.max_rows", None)  # Show all rows
         pd.set_option("display.max_columns", None)  # Show all columns
@@ -1594,7 +1599,7 @@ class ASLGraphDataBuilder:
             parquet_files = self._filter_files_by_sign(sign)
             print(f"Found {len(parquet_files)} parquet files for sign {sign}")
 
-            for parquet_file in tqdm(parquet_files, desc="Cleaning data", unit="file"):
+            for parquet_file in tqdm(parquet_files, desc=f"Cleaning [{sign}]", unit="file"):
                 df = pd.read_parquet(parquet_file)
                 df = self._remove_empty_frames(df)
                 df["sign"] = sign
@@ -1653,10 +1658,10 @@ def main():
     load_dotenv()
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
     SIGNS_TO_PROCESS = [
-        # "alligator",
+        "alligator",
         "animal",
-        # "bird",
-        # "bed",
+        "bird",
+        "bed",
         # "balloon",
         # "flower",
         # "cloud",
@@ -1688,7 +1693,7 @@ def main():
         # "hello",
         # "bye"
     ]
-    MAX_FILES_PER_SIGN = 1
+    MAX_FILES_PER_SIGN = 2
     TARGET_FRAMES = 40
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
