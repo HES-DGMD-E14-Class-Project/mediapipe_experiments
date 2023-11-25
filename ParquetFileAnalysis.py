@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
+from scipy import stats as st
 
 
 class ParquetFileAnalysis:
@@ -47,14 +48,41 @@ class ParquetFileAnalysis:
             print(f"\nSign: {sign}")
             print(f"Associated Parquet Files: {parquet_file_counts[sign]}")
             print(
-                f"Min Frames: {min(frames_counts[sign])}, Max Frames: {max(frames_counts[sign])}, Average Frames: {np.mean(frames_counts[sign]):.2f}"
+                f"Min Frames: {min(frames_counts[sign])}, Max Frames: {max(frames_counts[sign])}, Average Frames: {np.mean(frames_counts[sign]):.2f}, Median Frames: {np.median(frames_counts[sign]):.2f}"
             )
+            mode = st.mode(frames_counts[sign])
+            print(f"Mode Frames: {mode.mode}, count: {mode.count}")
 
         print("\nOverall Frame Landmarks Statistics:")
         print(f"Min Landmarks per Frame: {min(landmarks_per_frame_counts)}")
         print(f"Max Landmarks per Frame: {max(landmarks_per_frame_counts)}")
         print(f"Average Landmarks per Frame: {np.mean(landmarks_per_frame_counts):.2f}")
+        print(f"Median Landmarks per Frame: {np.median(landmarks_per_frame_counts):.2f}")
 
+        import csv
+
+        header = ["sign", "frames"]
+
+        # Open the file with 'w' mode and pass the file object to csv.DictWriter
+        with open('frames_counts.csv', 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=header)
+            writer.writeheader()
+
+            # Iterate over each sign and its frame counts
+            for sign, counts in frames_counts.items():
+                # You might need to modify how you handle the counts here depending on how you want to record them
+                # For example, if you want to record the average frame count for each sign:
+                avg_frames = np.mean(counts)
+                writer.writerow({'sign': sign, 'frames': avg_frames})
+
+        # Flattening the frames_counts dictionary to get a list of all frame counts
+        all_frame_counts = [frame_count for counts in frames_counts.values() for frame_count in counts]
+
+        # Calculating the average frame count across all signs
+        average_frame_count = np.mean(all_frame_counts)
+
+        # Printing the average frame count
+        print(f"Average frame count across all signs: {average_frame_count:.2f}")
 
 def main():
     load_dotenv()
