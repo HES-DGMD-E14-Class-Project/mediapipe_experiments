@@ -1,6 +1,5 @@
 import os
 import json
-import cv2
 import numpy as np
 import pandas as pd
 import logging
@@ -1483,9 +1482,13 @@ class ASLGraphDataBuilder:
         ]
 
         frames = []
-        for frame_number, frame_data in df.groupby("frame"):
+        sequential_frame_number = (
+            0  # Initialize a variable to track the frame number sequentially
+        )
+
+        for _, frame_data in df.groupby("frame"):
             frame_info = {
-                "frame": int(frame_number),
+                "frame": sequential_frame_number,  # Use the sequential frame number instead of the original
                 "landmarks": [],
                 "landmark_types": [],
                 "spatial": {
@@ -1578,6 +1581,9 @@ class ASLGraphDataBuilder:
                 frame_info.pop("spatial")
 
             frames.append(frame_info)
+            sequential_frame_number += (
+                1  # Increment the sequential frame number for the next frame
+            )
 
         result = {"frames": frames, "file": parquet_file}
         return result
@@ -1599,7 +1605,9 @@ class ASLGraphDataBuilder:
             parquet_files = self._filter_files_by_sign(sign)
             print(f"Found {len(parquet_files)} parquet files for sign {sign}")
 
-            for parquet_file in tqdm(parquet_files, desc=f"Cleaning [{sign}]", unit="file"):
+            for parquet_file in tqdm(
+                parquet_files, desc=f"Cleaning [{sign}]", unit="file"
+            ):
                 df = pd.read_parquet(parquet_file)
                 df = self._remove_empty_frames(df)
                 df["sign"] = sign
@@ -1629,7 +1637,7 @@ class ASLGraphDataBuilder:
 
                 df = self._drop_z_coordinate(df)
                 df = self._normalize_coordinates(df)
-                # df = self._smooth_landmarks(df, window_length=5, polyorder=3)
+                df = self._smooth_landmarks(df, window_length=5, polyorder=3)
 
                 example = self._format_example(df, parquet_file)
 
@@ -1641,8 +1649,13 @@ class ASLGraphDataBuilder:
                     )
 
             output_filename = os.path.join(
-                self.base_dir, f"spatio-temporal/{sign}.json"
+                self.base_dir, f"processed-{self.target_frames}-{self.max_files_per_sign}/{sign}.json"
             )
+
+            output_dir = os.path.join(self.base_dir, f"processed-{self.target_frames}-{self.max_files_per_sign}")
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
             with open(output_filename, "w") as f:
                 json.dump(all_signs_data[sign], f, indent=2)
 
@@ -1658,42 +1671,258 @@ def main():
     load_dotenv()
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
     SIGNS_TO_PROCESS = [
+        "TV",
+        "after",
+        "airplane",
+        "all",
         "alligator",
         "animal",
-        "bird",
+        "another",
+        "any",
+        "apple",
+        "arm",
+        "aunt",
+        "awake",
+        "backyard",
+        "bad",
+        "balloon",
+        "bath",
+        "because",
         "bed",
-        # "balloon",
-        # "flower",
-        # "cloud",
-        # "table",
-        # BEGIN test
-        # "callonphone",  # "good", "stop", "love", "clap", "ok", "peace"
-        # "milk",
-        # "pen",
-        # END test
-        # "duck",
-        # "elephant",
-        # "giraffe",
-        # "helicopter",
-        # "lion",
-        # "piano",
-        # "refrigerator",
-        # "scissors",
-        # "shower",
-        # "snack",
-        # "tiger",
-        # "tree",
-        # "vacuum",
-        # "water",
-        # "wolf",
-        # "zebra",
-        # "airplane",
-        # "bicycle",
-        # "camera",
-        # "hello",
-        # "bye"
+        "bedroom",
+        "bee",
+        "before",
+        "beside",
+        "better",
+        "bird",
+        "black",
+        "blow",
+        "blue",
+        "boat",
+        "book",
+        "boy",
+        "brother",
+        "brown",
+        "bug",
+        "bye",
+        "callonphone",
+        "can",
+        "car",
+        "carrot",
+        "cat",
+        "cereal",
+        "chair",
+        "cheek",
+        "child",
+        "chin",
+        "chocolate",
+        "clean",
+        "close",
+        "closet",
+        "cloud",
+        "clown",
+        "cow",
+        "cowboy",
+        "cry",
+        "cut",
+        "cute",
+        "dad",
+        "dance",
+        "dirty",
+        "dog",
+        "doll",
+        "donkey",
+        "down",
+        "drawer",
+        "drink",
+        "drop",
+        "dry",
+        "dryer",
+        "duck",
+        "ear",
+        "elephant",
+        "empty",
+        "every",
+        "eye",
+        "face",
+        "fall",
+        "farm",
+        "fast",
+        "feet",
+        "find",
+        "fine",
+        "finger",
+        "finish",
+        "fireman",
+        "first",
+        "fish",
+        "flag",
+        "flower",
+        "food",
+        "for",
+        "frenchfries",
+        "frog",
+        "garbage",
+        "gift",
+        "giraffe",
+        "girl",
+        "give",
+        "glasswindow",
+        "go",
+        "goose",
+        "grandma",
+        "grandpa",
+        "grass",
+        "green",
+        "gum",
+        "hair",
+        "happy",
+        "hat",
+        "hate",
+        "have",
+        "haveto",
+        "head",
+        "hear",
+        "helicopter",
+        "hello",
+        "hen",
+        "hesheit",
+        "hide",
+        "high",
+        "home",
+        "horse",
+        "hot",
+        "hungry",
+        "icecream",
+        "if",
+        "into",
+        "jacket",
+        "jeans",
+        "jump",
+        "kiss",
+        "kitty",
+        "lamp",
+        "later",
+        "like",
+        "lion",
+        "lips",
+        "listen",
+        "look",
+        "loud",
+        "mad",
+        "make",
+        "man",
+        "many",
+        "milk",
+        "minemy",
+        "mitten",
+        "mom",
+        "moon",
+        "morning",
+        "mouse",
+        "mouth",
+        "nap",
+        "napkin",
+        "night",
+        "no",
+        "noisy",
+        "nose",
+        "not",
+        "now",
+        "nuts",
+        "old",
+        "on",
+        "open",
+        "orange",
+        "outside",
+        "owie",
+        "owl",
+        "pajamas",
+        "pen",
+        "pencil",
+        "penny",
+        "person",
+        "pig",
+        "pizza",
+        "please",
+        "police",
+        "pool",
+        "potty",
+        "pretend",
+        "pretty",
+        "puppy",
+        "puzzle",
+        "quiet",
+        "radio",
+        "rain",
+        "read",
+        "red",
+        "refrigerator",
+        "ride",
+        "room",
+        "sad",
+        "same",
+        "say",
+        "scissors",
+        "see",
+        "shhh",
+        "shirt",
+        "shoe",
+        "shower",
+        "sick",
+        "sleep",
+        "sleepy",
+        "smile",
+        "snack",
+        "snow",
+        "stairs",
+        "stay",
+        "sticky",
+        "store",
+        "story",
+        "stuck",
+        "sun",
+        "table",
+        "talk",
+        "taste",
+        "thankyou",
+        "that",
+        "there",
+        "think",
+        "thirsty",
+        "tiger",
+        "time",
+        "tomorrow",
+        "tongue",
+        "tooth",
+        "toothbrush",
+        "touch",
+        "toy",
+        "tree",
+        "uncle",
+        "underwear",
+        "up",
+        "vacuum",
+        "wait",
+        "wake",
+        "water",
+        "wet",
+        "weus",
+        "where",
+        "white",
+        "who",
+        "why",
+        "will",
+        "wolf",
+        "yellow",
+        "yes",
+        "yesterday",
+        "yourself",
+        "yucky",
+        "zebra",
+        "zipper",
     ]
-    MAX_FILES_PER_SIGN = 2
+    MAX_FILES_PER_SIGN = 100
     TARGET_FRAMES = 40
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
