@@ -3,14 +3,24 @@ import json
 from dotenv import load_dotenv
 from collections import defaultdict, Counter
 
-def check_frame_counts(output_dir):
+def is_sequential(frames):
+    """ Check if frame numbers are sequential """
+    return all(frames[i]['frame'] == i for i in range(len(frames)))
+
+def check_frame_counts(output_dir, limit=-1):
     signs_info = defaultdict(lambda: defaultdict(list))
     global_landmarks_counts = []
     frames_with_no_landmarks = 0  # Counter for frames with no landmarks
+    non_sequential_files = []  # List to keep track of files with non-sequential frames
+    files_processed = 0
 
     # Iterate over the files in the output directory
     for filename in os.listdir(output_dir):
         if filename.endswith(".json"):
+            if limit != -1 and files_processed >= limit:
+                break
+            files_processed += 1
+
             filepath = os.path.join(output_dir, filename)
             with open(filepath, 'r') as f:
                 data = json.load(f)
@@ -22,6 +32,9 @@ def check_frame_counts(output_dir):
                     frame_count = len(example['frames'])
                     signs_info[sign_label]['frame_counts'].append(frame_count)
 
+                    if not is_sequential(example['frames']):
+                        non_sequential_files.append(filename)
+
                     # Collect landmark counts for this file and globally
                     for frame in example['frames']:
                         landmarks_count = len(frame['landmarks'])
@@ -31,6 +44,17 @@ def check_frame_counts(output_dir):
                         # Check for frames with no landmarks
                         if landmarks_count == 0:
                             frames_with_no_landmarks += 1
+
+                        # Validation for temporal consistency
+                        temporal_landmarks = set([temp['landmark'] for temp in frame['temporal']])
+                        landmark_types = set(frame['landmark_types'])
+
+                        if len(temporal_landmarks) != len(landmark_types):
+                            print(f"Warning: Inconsistent 'temporal' block in frame {frame['frame']} of file {filename}.")
+                            print(f"Expected {len(landmark_types)} entries, found {len(temporal_landmarks)}.")
+
+                        if temporal_landmarks != landmark_types:
+                            print(f"Warning: 'temporal' block does not match 'landmark_types' in frame {frame['frame']} of file {filename}.")
 
                 signs_info[sign_label]['landmarks_counts'].extend(file_landmarks_counts)
 
@@ -74,9 +98,16 @@ def check_frame_counts(output_dir):
     if frames_with_no_landmarks > 0:
         print(f"There are {frames_with_no_landmarks} frames with no landmarks.")
 
+    # Report if there are files with non-sequential frames
+    if non_sequential_files:
+        print(f"The following files have non-sequential frame numbers: {', '.join(non_sequential_files)}")
+    else:
+        print("All files have sequential frame numbers.")
+
+    print(f"Total files processed: {files_processed}")
 
 if __name__ == "__main__":
     load_dotenv()
     BASE_DIR = os.getenv("ASL_SIGNS_BASE_DIRECTORY")
-    JSON_DIR = os.path.join(BASE_DIR, f"spatio-temporal")
-    check_frame_counts(JSON_DIR)
+    JSON_DIR = os.path.join(BASE_DIR, f"processed-40-25")
+    check_frame_counts(JSON_DIR, limit=-1)
