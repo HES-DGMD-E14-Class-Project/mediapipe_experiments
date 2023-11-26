@@ -1490,7 +1490,6 @@ class ASLGraphDataBuilder:
             frame_info = {
                 "frame": sequential_frame_number,  # Use the sequential frame number instead of the original
                 "landmarks": [],
-                "landmark_types": [],
                 "spatial": {
                     "arms_configuration": frame_data["arms_configuration"].iloc[0]
                 },
@@ -1498,14 +1497,24 @@ class ASLGraphDataBuilder:
             }
 
             for landmark_type, landmark_data in frame_data.groupby("type"):
-                landmarks = landmark_data[["x", "y"]].values.tolist()
-                frame_info["landmarks"].extend(landmarks)
-                frame_info["landmark_types"].extend(
-                    [
-                        f"{landmark_type}-{int(idx)}"
-                        for idx in landmark_data["landmark_index"]
-                    ]
-                )
+                # Iterating through each row in the landmark data
+                for idx, row in landmark_data.iterrows():
+                    # Creating a dictionary for each landmark with 'landmark', 'x', and 'y' keys
+                    landmark_dict = {
+                        "landmark": f"{landmark_type}-{int(row['landmark_index'])}",
+                        "x": row["x"],
+                        "y": row["y"]
+                    }
+                    # Adding this dictionary to the 'landmarks' list in 'frame_info'
+                    frame_info["landmarks"].append(landmark_dict)
+                # landmarks = landmark_data[["x", "y"]].values.tolist()
+                # frame_info["landmarks"].extend(landmarks)
+                # frame_info["landmark_types"].extend(
+                #     [
+                #         f"{landmark_type}-{int(idx)}"
+                #         for idx in landmark_data["landmark_index"]
+                #     ]
+                # )
 
                 # Check if velocity and acceleration columns are present
                 if "velocity_x" in landmark_data and "velocity_y" in landmark_data:
@@ -1922,7 +1931,7 @@ def main():
         "zebra",
         "zipper",
     ]
-    MAX_FILES_PER_SIGN = 100
+    MAX_FILES_PER_SIGN = 25
     TARGET_FRAMES = 40
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
