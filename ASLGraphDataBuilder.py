@@ -1931,7 +1931,7 @@ def main():
         "zebra",
         "zipper",
     ]
-    MAX_FILES_PER_SIGN = 25
+    MAX_FILES_PER_SIGN = 500
     TARGET_FRAMES = 40
     data_cleaner = ASLGraphDataBuilder(
         BASE_DIR, SIGNS_TO_PROCESS, MAX_FILES_PER_SIGN, TARGET_FRAMES
