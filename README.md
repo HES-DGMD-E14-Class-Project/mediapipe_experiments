@@ -83,5 +83,13 @@ and change the environment property `ASL_SIGNS_BASE_DIRECTORY` to point to the `
 ```bash
 poetry run python LandmarksPlayer.py
 ```
+### Random Forest Model
+To run the MNIST detector real time using your own camera:
+```bash
+python3 RandomForestModelDemo.py
+```
+
+
+
 
 To quit any of the demos, press "q"
