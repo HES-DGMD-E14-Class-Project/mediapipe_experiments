@@ -399,7 +399,7 @@ class Mediapipe_BodyModule:
         Returns an array where missing landmarks are represented with placeholder values.
         """
         # Initialize a dictionary with placeholder values for each relevant landmark
-        landmark_dict = {lm: [-1, -1, -1] for lm in relevant_landmarks}
+        landmark_dict = {lm: [-1, -1, 0] for lm in relevant_landmarks}
 
         # Process pose landmarks
         if pose_landmarks and pose_landmarks.pose_landmarks:
@@ -440,22 +440,22 @@ class Mediapipe_BodyModule:
         all_features = []  # Combined list for landmarks, velocities, and accelerations
         edges = []
 
-        # Precompute velocity and acceleration
-        velocity_buffer = [np.zeros((len(relevant_landmarks), 2))]
-        acceleration_buffer = [np.zeros((len(relevant_landmarks), 2))]
+        velocity_buffer = []
+        acceleration_buffer = []
 
-        for i in range(1, len(self.frame_buffer)):
+        for i in range(len(self.frame_buffer)):
             current_frame_landmarks = self.get_uniform_landmarks(self.frame_buffer[i])[:, :2]  # Only x and y coordinates
-            prev_frame_landmarks = self.get_uniform_landmarks(self.frame_buffer[i - 1])[:, :2]  # Only x and y coordinates
 
-            velocity = current_frame_landmarks - prev_frame_landmarks
-            acceleration = (
-                velocity - velocity_buffer[-1] if i > 1 else np.zeros_like(velocity)
-            )
-
-            # Debugging: Print sample velocity and acceleration values
-            print(f"Sample Velocity for Frame {i}: {velocity[0]}")  # Print first landmark's velocity
-            print(f"Sample Acceleration for Frame {i}: {acceleration[0]}")  # Print first landmark's acceleration
+            if i == 0:
+                # For the first frame, set velocity and acceleration to zero
+                velocity = np.zeros_like(current_frame_landmarks)
+                acceleration = np.zeros_like(current_frame_landmarks)
+            else:
+                # For subsequent frames, calculate velocity and acceleration
+                prev_frame_landmarks = self.get_uniform_landmarks(self.frame_buffer[i - 1])[:, :2]
+                velocity = current_frame_landmarks - prev_frame_landmarks
+                prev_velocity = velocity_buffer[-1]
+                acceleration = velocity - prev_velocity
 
             velocity_buffer.append(velocity)
             acceleration_buffer.append(acceleration)
@@ -465,13 +465,14 @@ class Mediapipe_BodyModule:
             frame_landmarks = self.get_uniform_landmarks(frame_data)[
                 :, :2
             ]  # Drop z coordinates
-            frame_landmarks = savgol_filter(
-                frame_landmarks, window_length=5, polyorder=2, axis=0
-            )  # Apply Savitzky-Golay filter
 
             # Normalize landmarks by subtracting the centroid
             centroid = frame_landmarks.mean(axis=0)
             frame_landmarks -= centroid
+
+            frame_landmarks = savgol_filter(
+                frame_landmarks, window_length=5, polyorder=3, axis=0
+            )  # Apply Savitzky-Golay filter
 
             velocity = velocity_buffer[frame_index]
             acceleration = acceleration_buffer[frame_index]
