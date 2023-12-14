@@ -13,28 +13,15 @@ from torch_geometric.nn import (
     MessagePassing,
 )
 import torch.nn.functional as F
+from scipy.signal import savgol_filter
 
 ASL_SIGNS_MAPPING = {
-    0: "Sign 0",
-    1: "Sign 1",
-    2: "Sign 2",
-    3: "Sign 3",
-    4: "Sign 4",
-    5: "Sign 5",
-    6: "Sign 6",
-    7: "Sign 7",
-    8: "Sign 8",
-    9: "Sign 9",
-    10: "Sign 10",
-    11: "Sign 11",
-    12: "Sign 12",
-    13: "Sign 13",
-    14: "Sign 14",
-    15: "Sign 15",
-    16: "Sign 16",
-    17: "Sign 17",
-    18: "Sign 18",
-    19: "Sign 19",
+    0: "Dad",
+    1: "TV",
+    2: "Flower",
+    3: "Dance",
+    4: "Cry",
+    5: "Call Me",
 }
 
 # Landmarks specified in _extract_relevant_landmarks
@@ -340,7 +327,7 @@ class MinimalDummyASLClassifier(nn.Module):
 
 
 # Initialize the minimal dummy model
-num_classes = 20  # Total number of classes
+num_classes = 6  # Total number of classes
 minimal_dummy_model = MinimalDummyASLClassifier(num_classes)
 
 
@@ -389,9 +376,12 @@ class Mediapipe_BodyModule:
         self.previous_frame_landmarks = None
 
         num_features = 6  # 2 (coordinates) + 2 (velocity) + 2 (acceleration)
-        num_classes = 20  # Number of ASL Signs
-        self.model = MinimalDummyASLClassifier(num_classes=num_classes)
-        # self.model.load_state_dict(torch.load("path_to_model_weights.pth"))
+        num_classes = 6  # Number of ASL Signs
+        # self.model = MinimalDummyASLClassifier(num_classes=num_classes)
+        self.model = ASLGraphClassifier(
+            num_features=num_features, num_classes=num_classes
+        )
+        self.model.load_state_dict(torch.load("models/Best-GNN-5-Weights.pth"))
         self.model.eval()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
@@ -445,121 +435,122 @@ class Mediapipe_BodyModule:
 
         return np.array(extracted_landmarks)
 
-    def update_previous_landmarks(self, current_frame_landmarks):
-        """
-        Updates the stored data for the previous frame.
-        """
-        # Reset previous landmarks and velocity
-        self.previous_frame_landmarks.fill(0)
-        self.previous_velocity.fill(0)
-
-        # Update only the landmarks present in current_frame_landmarks
-        for i, landmark in enumerate(current_frame_landmarks):
-            if i < self.max_landmarks:
-                self.previous_frame_landmarks[i] = landmark
-
-    def normalize_landmarks(self, landmarks):
-        """
-        Normalize landmarks by subtracting the centroid.
-        """
-        centroid = np.mean(landmarks, axis=0)
-        normalized_landmarks = landmarks - centroid
-        return normalized_landmarks
-
-    def calculate_velocity_acceleration(self, current_landmarks):
-        """
-        Calculate velocity and acceleration for landmarks, ensuring shape consistency.
-        """
-        # Find the maximum length between current and previous landmarks
-        max_length = max(len(current_landmarks), len(self.previous_frame_landmarks))
-
-        # Pad current_landmarks and previous_frame_landmarks to the same length
-        current_landmarks_padded = np.pad(
-            current_landmarks,
-            ((0, max_length - len(current_landmarks)), (0, 0)),
-            "constant",
-        )
-        previous_landmarks_padded = np.pad(
-            self.previous_frame_landmarks,
-            ((0, max_length - len(self.previous_frame_landmarks)), (0, 0)),
-            "constant",
-        )
-
-        # Calculate velocity
-        velocity = current_landmarks_padded - previous_landmarks_padded
-
-        # Ensure velocity and previous_velocity are padded to the same length
-        max_velocity_length = max(len(velocity), len(self.previous_velocity))
-        velocity_padded = np.pad(
-            velocity, ((0, max_velocity_length - len(velocity)), (0, 0)), "constant"
-        )
-        previous_velocity_padded = np.pad(
-            self.previous_velocity,
-            ((0, max_velocity_length - len(self.previous_velocity)), (0, 0)),
-            "constant",
-        )
-
-        # Calculate acceleration
-        acceleration = velocity_padded - previous_velocity_padded
-
-        # Update previous landmarks and velocity
-        self.update_previous_landmarks(current_landmarks_padded)
-        self.previous_velocity = velocity_padded
-
-        return velocity_padded, acceleration
-
-    def construct_edge_index(self):
-        edge_indices = []
-        for connection_set in [HAND_CONNECTIONS, POSE_CONNECTIONS, FACE_CONNECTIONS]:
-            for start, end in connection_set:
-                # Extracting integer indices directly from tuples
-                start_idx = int(start.split("-")[1])
-                end_idx = int(end.split("-")[1])
-                edge_indices.append([start_idx, end_idx])
-        return torch.tensor(edge_indices, dtype=torch.long).t().contiguous()
-
-    def create_graph_data(self, frame_features):
-        x = torch.tensor(frame_features, dtype=torch.float)
-        edge_index = self.construct_edge_index()
-        return Data(x=x, edge_index=edge_index)
-
-    def convert_buffer_to_model_input(self):
-        # Flatten the buffer to create one large array of all landmarks
-        all_features = np.vstack(self.frame_buffer)
-
-        # Convert features to tensor
-        x = torch.tensor(all_features, dtype=torch.float)
-
-        # Construct edge indices for the graph
-        edge_indices = self.construct_combined_edge_index()
-
-        # Create graph data
-        return Data(x=x, edge_index=edge_indices)
-
-    def construct_combined_edge_index(self):
+    def construct_graph_from_frames(self):
+        graphs = []
+        all_features = []  # Combined list for landmarks, velocities, and accelerations
         edges = []
-        max_landmarks = max(len(frame) for frame in self.frame_buffer)
 
-        # Iterate through each frame
-        for frame_index in range(len(self.frame_buffer)):
-            # Add edges within and between frames
-            for connection_set in [
-                HAND_CONNECTIONS,
-                POSE_CONNECTIONS,
-                FACE_CONNECTIONS,
-            ]:
-                for connection in connection_set:
-                    # Split each element of the tuple and convert to int
-                    start_idx = (
-                        int(connection[0].split("-")[1]) + max_landmarks * frame_index
-                    )
-                    end_idx = (
-                        int(connection[1].split("-")[1]) + max_landmarks * frame_index
-                    )
+        # Precompute velocity and acceleration
+        velocity_buffer = [np.zeros((len(relevant_landmarks), 2))]
+        acceleration_buffer = [np.zeros((len(relevant_landmarks), 2))]
 
-                    edges.append([start_idx, end_idx])
+        for i in range(1, len(self.frame_buffer)):
+            current_frame_landmarks = self.get_uniform_landmarks(self.frame_buffer[i])[:, :2]  # Only x and y coordinates
+            prev_frame_landmarks = self.get_uniform_landmarks(self.frame_buffer[i - 1])[:, :2]  # Only x and y coordinates
 
-        return torch.tensor(edges, dtype=torch.long).t().contiguous()
+            velocity = current_frame_landmarks - prev_frame_landmarks
+            acceleration = (
+                velocity - velocity_buffer[-1] if i > 1 else np.zeros_like(velocity)
+            )
+
+            # Debugging: Print sample velocity and acceleration values
+            print(f"Sample Velocity for Frame {i}: {velocity[0]}")  # Print first landmark's velocity
+            print(f"Sample Acceleration for Frame {i}: {acceleration[0]}")  # Print first landmark's acceleration
+
+            velocity_buffer.append(velocity)
+            acceleration_buffer.append(acceleration)
+
+        # Loop over each frame in the buffer
+        for frame_index, frame_data in enumerate(self.frame_buffer):
+            frame_landmarks = self.get_uniform_landmarks(frame_data)[
+                :, :2
+            ]  # Drop z coordinates
+            frame_landmarks = savgol_filter(
+                frame_landmarks, window_length=5, polyorder=2, axis=0
+            )  # Apply Savitzky-Golay filter
+
+            # Normalize landmarks by subtracting the centroid
+            centroid = frame_landmarks.mean(axis=0)
+            frame_landmarks -= centroid
+
+            velocity = velocity_buffer[frame_index]
+            acceleration = acceleration_buffer[frame_index]
+
+            # Combine spatial and temporal features
+            for i, landmark_id in enumerate(relevant_landmarks):
+                landmark_features = frame_landmarks[i].tolist()
+                velocity_features = velocity[i].tolist()
+                acceleration_features = acceleration[i].tolist()
+                combined_features = landmark_features + velocity_features + acceleration_features
+
+                all_features.append(combined_features)
+
+                # Add spatial edges within the frame using natural connections
+                for j, other_landmark_id in enumerate(relevant_landmarks):
+                    if i != j:
+                        connection = (landmark_id, other_landmark_id)
+                        if (
+                            connection in HAND_CONNECTIONS
+                            or connection in POSE_CONNECTIONS
+                            or connection in FACE_CONNECTIONS
+                        ):
+                            edges.append(
+                                [
+                                    len(all_features) - len(frame_landmarks) + i,
+                                    len(all_features) - len(frame_landmarks) + j,
+                                ]
+                            )
+
+            # Add temporal edges between frames
+            for i in range(len(self.frame_buffer) - 1):
+                for j in range(len(frame_landmarks)):
+                    start_index = i * len(frame_landmarks) + j
+                    end_index = (i + 1) * len(frame_landmarks) + j
+                    edges.append([start_index, end_index])
+
+        # Create a mapping from landmark IDs to indices in the graph
+        landmark_to_index = {landmark_id: i for i, landmark_id in enumerate(relevant_landmarks)}
+
+        # Correct the edge index calculation using the mapping
+        valid_edges = []
+        for frame_index, frame_data in enumerate(self.frame_buffer):
+            for i, landmark_id in enumerate(relevant_landmarks):
+                for j, other_landmark_id in enumerate(relevant_landmarks):
+                    if i != j:
+                        connection = (landmark_id, other_landmark_id)
+                        if connection in HAND_CONNECTIONS or connection in POSE_CONNECTIONS or connection in FACE_CONNECTIONS:
+                            start_index = landmark_to_index[landmark_id] + frame_index * len(relevant_landmarks)
+                            end_index = landmark_to_index[other_landmark_id] + frame_index * len(relevant_landmarks)
+                            if 0 <= start_index < len(all_features) and 0 <= end_index < len(all_features):
+                                valid_edges.append([start_index, end_index])
+                            else:
+                                print(f"Invalid edge: {start_index}, {end_index}")
+
+        # Create the graph
+        x = torch.tensor(all_features, dtype=torch.float)
+        edge_index = torch.tensor(valid_edges, dtype=torch.long).t().contiguous()
+
+        # Create a single Data object for the combined graph
+        combined_graph = Data(x=x, edge_index=edge_index)
+
+        return combined_graph
+
+    def get_uniform_landmarks(self, frame_data):
+        # Initialize an array with placeholder values for each relevant landmark
+        uniform_landmarks = np.full(
+            (len(relevant_landmarks), 3), -1.0
+        )  # Assuming 3 for x, y, z
+
+        for landmark_id in relevant_landmarks:
+            type, idx = landmark_id.split("-")
+            idx = int(idx)
+
+            if type in frame_data and idx < len(frame_data[type]):
+                uniform_landmarks[relevant_landmarks.index(landmark_id)] = frame_data[
+                    type
+                ][idx]
+
+        return uniform_landmarks
 
     def process_frame(self, frame):
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -569,55 +560,20 @@ class Mediapipe_BodyModule:
         face_landmarks = self.mp_face_mesh.process(frame_rgb)
         pose_landmarks = self.mp_pose.process(frame_rgb)
 
-        # Extract and normalize landmarks
+        # Extract landmarks
         extracted_landmarks = self.extract_landmarks(
             hand_landmarks, face_landmarks, pose_landmarks
         )
-        normalized_landmarks = self.normalize_landmarks(extracted_landmarks)
 
-        # Calculate velocity and acceleration
-        velocity, acceleration = self.calculate_velocity_acceleration(
-            normalized_landmarks
-        )
+        # Store the extracted landmarks in the frame buffer
+        self.frame_buffer.append(extracted_landmarks)
 
-        # Update previous landmarks
-        self.update_previous_landmarks(normalized_landmarks)
-
-        # Pad arrays to ensure consistent shape
-        max_length = max(len(normalized_landmarks), len(velocity), len(acceleration))
-        normalized_landmarks = np.pad(
-            normalized_landmarks,
-            ((0, max_length - len(normalized_landmarks)), (0, 0)),
-            "constant",
-        )
-        velocity = np.pad(
-            velocity, ((0, max_length - len(velocity)), (0, 0)), "constant"
-        )
-        acceleration = np.pad(
-            acceleration, ((0, max_length - len(acceleration)), (0, 0)), "constant"
-        )
-
-        # Combine features
-        combined_features = np.hstack((normalized_landmarks, velocity, acceleration))
-
-        # Add combined features to frame buffer
-        self.frame_buffer.append(combined_features)
-
-        if len(self.frame_buffer) > self.buffer_size:
-            self.frame_buffer.pop(0)
-
-        if len(self.frame_buffer) == self.buffer_size:
-            # Construct graph and perform model inference
-            model_input = self.convert_buffer_to_model_input()
-            predicted_sign = self.perform_inference(model_input)
-
-            # Display the result
-            annotated_image = self.display_result(frame, predicted_sign)
-            return annotated_image
-
-        return self.draw_landmarks_on_image(
+        # Draw landmarks on the frame
+        annotated_image = self.draw_landmarks_on_image(
             frame, hand_landmarks, face_landmarks, pose_landmarks
         )
+
+        return annotated_image
 
     def draw_landmarks_on_image(
         self, rgb_image, hand_landmarks, face_landmarks, pose_landmarks
@@ -663,9 +619,6 @@ class Mediapipe_BodyModule:
         return frame
 
     def perform_inference(self, model_input):
-        # If using the real model, uncomment the line below
-        # self.model.eval()  # Set the model to evaluation mode if needed
-
         # Perform inference
         output = self.model(model_input)
         print(f"After inference, output is {output}")
@@ -694,16 +647,8 @@ class Mediapipe_BodyModule:
                 print("Ignoring empty frame")
                 break
 
-            # Process frame for landmarks
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            hand_landmarks = self.mp_hands.process(frame_rgb)
-            face_landmarks = self.mp_face_mesh.process(frame_rgb)
-            pose_landmarks = self.mp_pose.process(frame_rgb)
-
             # Draw landmarks on the frame
-            annotated_image = self.draw_landmarks_on_image(
-                frame, hand_landmarks, face_landmarks, pose_landmarks
-            )
+            annotated_image = self.process_frame(frame)
 
             if countdown_active:
                 elapsed_time = time.time() - countdown_start_time
@@ -721,12 +666,12 @@ class Mediapipe_BodyModule:
                 else:
                     countdown_active = False
                     start_capture = True
-                    capture_start_time = time.time()
+                    capture_start_time = time.time() # removed during refac
                     self.frame_buffer = []  # Clear the buffer
 
             elif classification_done:
                 annotated_image = self.display_result(annotated_image, predicted_sign)
-            elif not start_capture and not countdown_active:
+            elif not start_capture and not countdown_active: # removed during refac
                 # Display "Waiting..." text only when not capturing and countdown is inactive
                 annotated_image = self.display_result(annotated_image, "Waiting...")
 
@@ -743,22 +688,6 @@ class Mediapipe_BodyModule:
 
             # Process and classify the frame if capture is started
             if start_capture and not classification_done:
-                # Extract and normalize landmarks
-                extracted_landmarks = self.extract_landmarks(
-                    hand_landmarks, face_landmarks, pose_landmarks
-                )
-                normalized_landmarks = self.normalize_landmarks(extracted_landmarks)
-                # Calculate velocity and acceleration
-                velocity, acceleration = self.calculate_velocity_acceleration(
-                    normalized_landmarks
-                )
-
-                # Combine features
-                combined_features = np.hstack(
-                    (normalized_landmarks, velocity, acceleration)
-                )
-                self.frame_buffer.append(combined_features)
-
                 # Update capturing text with frame count
                 capture_text = (
                     f"Capturing... {len(self.frame_buffer)}/{self.buffer_size}"
@@ -773,14 +702,13 @@ class Mediapipe_BodyModule:
                     2,
                 )
 
-                # Check if the capture duration has passed
-                if len(self.frame_buffer) >= self.buffer_size:
-                    predicted_sign = self.perform_inference(
-                        self.convert_buffer_to_model_input()
-                    )
-                    print(f"Classified as: {predicted_sign}")
-                    classification_done = True
-                    start_capture = False
+            # Check if the capture duration has passed
+            if start_capture and len(self.frame_buffer) >= self.buffer_size:
+                model_input = self.construct_graph_from_frames()
+                predicted_sign = self.perform_inference(model_input)
+                classification_done = True
+                start_capture = False
+                annotated_image = self.display_result(annotated_image, predicted_sign)
 
             # Show the annotated frame
             cv2.imshow("Show", annotated_image)
