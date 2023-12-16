@@ -86,7 +86,7 @@ poetry run python LandmarksPlayer.py
 ### Random Forest Model
 To run the MNIST detector real time using your own camera:
 1. Navigate to the RandomForestModel folder
-2. Run ```bash python3 inference.py```
+2. Run ```python3 inference.py```
 3. Sign the letters you  want to sign
 
 
