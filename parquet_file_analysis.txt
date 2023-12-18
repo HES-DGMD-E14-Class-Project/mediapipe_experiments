@@ -1,0 +1,1258 @@
+Total number of unique signs: 250
+
+Sign: blow
+Associated Parquet Files: 391
+Min Frames: 2, Max Frames: 404, Average Frames: 35.10, Median Frames: 18.00
+Mode Frames: 6, count: 69
+
+Sign: wait
+Associated Parquet Files: 346
+Min Frames: 2, Max Frames: 281, Average Frames: 46.06, Median Frames: 23.50
+Mode Frames: 6, count: 47
+
+Sign: cloud
+Associated Parquet Files: 378
+Min Frames: 6, Max Frames: 265, Average Frames: 42.49, Median Frames: 27.50
+Mode Frames: 6, count: 28
+
+Sign: bird
+Associated Parquet Files: 404
+Min Frames: 2, Max Frames: 233, Average Frames: 41.61, Median Frames: 25.50
+Mode Frames: 13, count: 16
+
+Sign: owie
+Associated Parquet Files: 365
+Min Frames: 5, Max Frames: 362, Average Frames: 41.99, Median Frames: 22.00
+Mode Frames: 6, count: 50
+
+Sign: duck
+Associated Parquet Files: 405
+Min Frames: 5, Max Frames: 237, Average Frames: 41.33, Median Frames: 25.00
+Mode Frames: 6, count: 17
+
+Sign: minemy
+Associated Parquet Files: 376
+Min Frames: 2, Max Frames: 264, Average Frames: 36.71, Median Frames: 21.00
+Mode Frames: 6, count: 29
+
+Sign: lips
+Associated Parquet Files: 402
+Min Frames: 3, Max Frames: 255, Average Frames: 42.50, Median Frames: 28.00
+Mode Frames: 22, count: 19
+
+Sign: flower
+Associated Parquet Files: 396
+Min Frames: 6, Max Frames: 235, Average Frames: 44.99, Median Frames: 25.00
+Mode Frames: 20, count: 17
+
+Sign: time
+Associated Parquet Files: 363
+Min Frames: 5, Max Frames: 341, Average Frames: 38.36, Median Frames: 22.00
+Mode Frames: 6, count: 60
+
+Sign: vacuum
+Associated Parquet Files: 307
+Min Frames: 5, Max Frames: 316, Average Frames: 44.20, Median Frames: 26.00
+Mode Frames: 6, count: 73
+
+Sign: apple
+Associated Parquet Files: 377
+Min Frames: 3, Max Frames: 254, Average Frames: 44.11, Median Frames: 26.00
+Mode Frames: 6, count: 26
+
+Sign: puzzle
+Associated Parquet Files: 342
+Min Frames: 2, Max Frames: 328, Average Frames: 45.15, Median Frames: 23.00
+Mode Frames: 6, count: 70
+
+Sign: mitten
+Associated Parquet Files: 377
+Min Frames: 5, Max Frames: 500, Average Frames: 58.82, Median Frames: 36.00
+Mode Frames: 6, count: 21
+
+Sign: there
+Associated Parquet Files: 363
+Min Frames: 4, Max Frames: 227, Average Frames: 31.19, Median Frames: 18.00
+Mode Frames: 6, count: 80
+
+Sign: dry
+Associated Parquet Files: 391
+Min Frames: 6, Max Frames: 265, Average Frames: 37.95, Median Frames: 22.00
+Mode Frames: 6, count: 35
+
+Sign: shirt
+Associated Parquet Files: 352
+Min Frames: 2, Max Frames: 224, Average Frames: 34.62, Median Frames: 21.00
+Mode Frames: 6, count: 54
+
+Sign: owl
+Associated Parquet Files: 396
+Min Frames: 5, Max Frames: 246, Average Frames: 41.38, Median Frames: 26.00
+Mode Frames: 19, count: 20
+
+Sign: yellow
+Associated Parquet Files: 384
+Min Frames: 6, Max Frames: 303, Average Frames: 41.24, Median Frames: 24.00
+Mode Frames: 6, count: 38
+
+Sign: not
+Associated Parquet Files: 377
+Min Frames: 2, Max Frames: 353, Average Frames: 31.55, Median Frames: 13.00
+Mode Frames: 6, count: 134
+
+Sign: zipper
+Associated Parquet Files: 299
+Min Frames: 2, Max Frames: 312, Average Frames: 32.61, Median Frames: 17.00
+Mode Frames: 6, count: 72
+
+Sign: clean
+Associated Parquet Files: 355
+Min Frames: 3, Max Frames: 269, Average Frames: 35.31, Median Frames: 21.00
+Mode Frames: 6, count: 72
+
+Sign: closet
+Associated Parquet Files: 393
+Min Frames: 6, Max Frames: 290, Average Frames: 47.38, Median Frames: 30.00
+Mode Frames: 6, count: 22
+
+Sign: quiet
+Associated Parquet Files: 358
+Min Frames: 2, Max Frames: 321, Average Frames: 30.99, Median Frames: 12.50
+Mode Frames: 6, count: 94
+
+Sign: have
+Associated Parquet Files: 337
+Min Frames: 2, Max Frames: 281, Average Frames: 29.99, Median Frames: 18.00
+Mode Frames: 6, count: 49
+
+Sign: brother
+Associated Parquet Files: 395
+Min Frames: 2, Max Frames: 286, Average Frames: 33.17, Median Frames: 19.00
+Mode Frames: 6, count: 90
+
+Sign: clown
+Associated Parquet Files: 388
+Min Frames: 6, Max Frames: 235, Average Frames: 38.20, Median Frames: 23.00
+Mode Frames: 15, count: 24
+
+Sign: cheek
+Associated Parquet Files: 375
+Min Frames: 4, Max Frames: 388, Average Frames: 52.33, Median Frames: 29.00
+Mode Frames: 6, count: 17
+
+Sign: cute
+Associated Parquet Files: 382
+Min Frames: 6, Max Frames: 254, Average Frames: 37.83, Median Frames: 20.00
+Mode Frames: 6, count: 37
+
+Sign: store
+Associated Parquet Files: 374
+Min Frames: 4, Max Frames: 255, Average Frames: 38.14, Median Frames: 22.50
+Mode Frames: 6, count: 53
+
+Sign: shoe
+Associated Parquet Files: 364
+Min Frames: 6, Max Frames: 308, Average Frames: 36.74, Median Frames: 19.50
+Mode Frames: 6, count: 49
+
+Sign: wet
+Associated Parquet Files: 382
+Min Frames: 2, Max Frames: 224, Average Frames: 28.98, Median Frames: 13.00
+Mode Frames: 6, count: 103
+
+Sign: see
+Associated Parquet Files: 388
+Min Frames: 6, Max Frames: 227, Average Frames: 30.94, Median Frames: 19.00
+Mode Frames: 6, count: 41
+
+Sign: empty
+Associated Parquet Files: 372
+Min Frames: 2, Max Frames: 254, Average Frames: 30.90, Median Frames: 18.00
+Mode Frames: 6, count: 96
+
+Sign: fall
+Associated Parquet Files: 382
+Min Frames: 3, Max Frames: 422, Average Frames: 31.13, Median Frames: 14.50
+Mode Frames: 6, count: 94
+
+Sign: balloon
+Associated Parquet Files: 393
+Min Frames: 2, Max Frames: 281, Average Frames: 43.12, Median Frames: 24.00
+Mode Frames: 6, count: 30
+
+Sign: frenchfries
+Associated Parquet Files: 384
+Min Frames: 4, Max Frames: 259, Average Frames: 41.69, Median Frames: 27.00
+Mode Frames: 6, count: 31
+
+Sign: finger
+Associated Parquet Files: 379
+Min Frames: 3, Max Frames: 298, Average Frames: 45.59, Median Frames: 26.00
+Mode Frames: 6, count: 22
+
+Sign: same
+Associated Parquet Files: 380
+Min Frames: 3, Max Frames: 270, Average Frames: 37.07, Median Frames: 22.00
+Mode Frames: 6, count: 40
+
+Sign: cry
+Associated Parquet Files: 390
+Min Frames: 2, Max Frames: 249, Average Frames: 42.29, Median Frames: 25.00
+Mode Frames: 6, count: 28
+
+Sign: hungry
+Associated Parquet Files: 385
+Min Frames: 2, Max Frames: 237, Average Frames: 28.35, Median Frames: 16.00
+Mode Frames: 6, count: 107
+
+Sign: orange
+Associated Parquet Files: 390
+Min Frames: 5, Max Frames: 254, Average Frames: 39.80, Median Frames: 25.00
+Mode Frames: 18, count: 23
+
+Sign: milk
+Associated Parquet Files: 377
+Min Frames: 3, Max Frames: 327, Average Frames: 38.37, Median Frames: 24.00
+Mode Frames: 6, count: 35
+
+Sign: go
+Associated Parquet Files: 388
+Min Frames: 2, Max Frames: 292, Average Frames: 29.93, Median Frames: 15.00
+Mode Frames: 6, count: 122
+
+Sign: drawer
+Associated Parquet Files: 373
+Min Frames: 3, Max Frames: 312, Average Frames: 39.71, Median Frames: 23.00
+Mode Frames: 6, count: 61
+
+Sign: TV
+Associated Parquet Files: 385
+Min Frames: 3, Max Frames: 284, Average Frames: 36.88, Median Frames: 22.00
+Mode Frames: 6, count: 49
+
+Sign: another
+Associated Parquet Files: 370
+Min Frames: 3, Max Frames: 218, Average Frames: 33.29, Median Frames: 20.00
+Mode Frames: 6, count: 70
+
+Sign: giraffe
+Associated Parquet Files: 382
+Min Frames: 6, Max Frames: 310, Average Frames: 37.43, Median Frames: 23.00
+Mode Frames: 6, count: 57
+
+Sign: wake
+Associated Parquet Files: 401
+Min Frames: 2, Max Frames: 219, Average Frames: 34.37, Median Frames: 22.00
+Mode Frames: 6, count: 29
+
+Sign: bee
+Associated Parquet Files: 395
+Min Frames: 2, Max Frames: 268, Average Frames: 36.14, Median Frames: 22.00
+Mode Frames: 6, count: 38
+
+Sign: bad
+Associated Parquet Files: 376
+Min Frames: 3, Max Frames: 277, Average Frames: 31.86, Median Frames: 16.00
+Mode Frames: 6, count: 87
+
+Sign: can
+Associated Parquet Files: 366
+Min Frames: 2, Max Frames: 264, Average Frames: 28.29, Median Frames: 16.00
+Mode Frames: 6, count: 98
+
+Sign: say
+Associated Parquet Files: 377
+Min Frames: 2, Max Frames: 314, Average Frames: 34.30, Median Frames: 19.00
+Mode Frames: 6, count: 37
+
+Sign: callonphone
+Associated Parquet Files: 385
+Min Frames: 2, Max Frames: 386, Average Frames: 35.37, Median Frames: 20.00
+Mode Frames: 6, count: 57
+
+Sign: finish
+Associated Parquet Files: 388
+Min Frames: 4, Max Frames: 246, Average Frames: 39.24, Median Frames: 23.00
+Mode Frames: 6, count: 30
+
+Sign: old
+Associated Parquet Files: 389
+Min Frames: 5, Max Frames: 250, Average Frames: 34.90, Median Frames: 18.00
+Mode Frames: 6, count: 78
+
+Sign: backyard
+Associated Parquet Files: 372
+Min Frames: 6, Max Frames: 299, Average Frames: 45.94, Median Frames: 30.50
+Mode Frames: 6, count: 42
+
+Sign: sick
+Associated Parquet Files: 380
+Min Frames: 2, Max Frames: 280, Average Frames: 33.55, Median Frames: 20.00
+Mode Frames: 6, count: 42
+
+Sign: look
+Associated Parquet Files: 414
+Min Frames: 3, Max Frames: 332, Average Frames: 34.50, Median Frames: 21.00
+Mode Frames: 6, count: 45
+
+Sign: that
+Associated Parquet Files: 381
+Min Frames: 4, Max Frames: 250, Average Frames: 28.93, Median Frames: 16.00
+Mode Frames: 6, count: 97
+
+Sign: black
+Associated Parquet Files: 388
+Min Frames: 6, Max Frames: 329, Average Frames: 33.39, Median Frames: 20.00
+Mode Frames: 6, count: 66
+
+Sign: yourself
+Associated Parquet Files: 385
+Min Frames: 3, Max Frames: 219, Average Frames: 35.06, Median Frames: 18.00
+Mode Frames: 6, count: 40
+
+Sign: open
+Associated Parquet Files: 354
+Min Frames: 6, Max Frames: 293, Average Frames: 33.00, Median Frames: 20.00
+Mode Frames: 6, count: 71
+
+Sign: alligator
+Associated Parquet Files: 390
+Min Frames: 5, Max Frames: 414, Average Frames: 46.21, Median Frames: 27.00
+Mode Frames: 6, count: 40
+
+Sign: moon
+Associated Parquet Files: 380
+Min Frames: 2, Max Frames: 243, Average Frames: 39.61, Median Frames: 23.00
+Mode Frames: 6, count: 40
+
+Sign: find
+Associated Parquet Files: 397
+Min Frames: 3, Max Frames: 227, Average Frames: 29.91, Median Frames: 18.00
+Mode Frames: 6, count: 48
+
+Sign: pizza
+Associated Parquet Files: 396
+Min Frames: 2, Max Frames: 244, Average Frames: 35.80, Median Frames: 21.50
+Mode Frames: 6, count: 26
+
+Sign: shhh
+Associated Parquet Files: 411
+Min Frames: 3, Max Frames: 259, Average Frames: 38.64, Median Frames: 23.00
+Mode Frames: 16, count: 20
+
+Sign: fast
+Associated Parquet Files: 362
+Min Frames: 4, Max Frames: 238, Average Frames: 34.92, Median Frames: 20.00
+Mode Frames: 6, count: 59
+
+Sign: jacket
+Associated Parquet Files: 336
+Min Frames: 2, Max Frames: 226, Average Frames: 28.76, Median Frames: 16.00
+Mode Frames: 6, count: 81
+
+Sign: scissors
+Associated Parquet Files: 369
+Min Frames: 2, Max Frames: 246, Average Frames: 33.17, Median Frames: 20.00
+Mode Frames: 6, count: 41
+
+Sign: now
+Associated Parquet Files: 369
+Min Frames: 4, Max Frames: 245, Average Frames: 32.11, Median Frames: 17.00
+Mode Frames: 6, count: 93
+
+Sign: man
+Associated Parquet Files: 392
+Min Frames: 3, Max Frames: 247, Average Frames: 33.84, Median Frames: 21.00
+Mode Frames: 6, count: 54
+
+Sign: sticky
+Associated Parquet Files: 349
+Min Frames: 5, Max Frames: 233, Average Frames: 40.18, Median Frames: 23.00
+Mode Frames: 6, count: 54
+
+Sign: jump
+Associated Parquet Files: 383
+Min Frames: 2, Max Frames: 308, Average Frames: 34.40, Median Frames: 18.00
+Mode Frames: 6, count: 84
+
+Sign: sleep
+Associated Parquet Files: 380
+Min Frames: 4, Max Frames: 308, Average Frames: 35.56, Median Frames: 21.00
+Mode Frames: 6, count: 55
+
+Sign: sun
+Associated Parquet Files: 389
+Min Frames: 3, Max Frames: 254, Average Frames: 34.95, Median Frames: 22.00
+Mode Frames: 6, count: 31
+
+Sign: first
+Associated Parquet Files: 398
+Min Frames: 2, Max Frames: 253, Average Frames: 32.13, Median Frames: 21.00
+Mode Frames: 6, count: 45
+
+Sign: grass
+Associated Parquet Files: 386
+Min Frames: 4, Max Frames: 231, Average Frames: 37.78, Median Frames: 24.00
+Mode Frames: 6, count: 32
+
+Sign: uncle
+Associated Parquet Files: 405
+Min Frames: 4, Max Frames: 237, Average Frames: 41.02, Median Frames: 26.00
+Mode Frames: 6, count: 18
+
+Sign: fish
+Associated Parquet Files: 380
+Min Frames: 6, Max Frames: 243, Average Frames: 35.40, Median Frames: 20.00
+Mode Frames: 6, count: 57
+
+Sign: cowboy
+Associated Parquet Files: 378
+Min Frames: 6, Max Frames: 352, Average Frames: 48.29, Median Frames: 30.00
+Mode Frames: 6, count: 20
+
+Sign: snow
+Associated Parquet Files: 386
+Min Frames: 2, Max Frames: 270, Average Frames: 37.83, Median Frames: 23.00
+Mode Frames: 6, count: 29
+
+Sign: dryer
+Associated Parquet Files: 369
+Min Frames: 6, Max Frames: 273, Average Frames: 44.98, Median Frames: 28.00
+Mode Frames: 30, count: 16
+
+Sign: green
+Associated Parquet Files: 382
+Min Frames: 6, Max Frames: 239, Average Frames: 38.58, Median Frames: 21.00
+Mode Frames: 6, count: 54
+
+Sign: bug
+Associated Parquet Files: 387
+Min Frames: 2, Max Frames: 245, Average Frames: 37.26, Median Frames: 21.00
+Mode Frames: 15, count: 23
+
+Sign: nap
+Associated Parquet Files: 391
+Min Frames: 6, Max Frames: 232, Average Frames: 44.41, Median Frames: 31.00
+Mode Frames: 6, count: 39
+
+Sign: feet
+Associated Parquet Files: 372
+Min Frames: 5, Max Frames: 247, Average Frames: 44.75, Median Frames: 28.00
+Mode Frames: 6, count: 49
+
+Sign: yucky
+Associated Parquet Files: 379
+Min Frames: 2, Max Frames: 259, Average Frames: 37.44, Median Frames: 23.00
+Mode Frames: 6, count: 42
+
+Sign: morning
+Associated Parquet Files: 372
+Min Frames: 2, Max Frames: 255, Average Frames: 37.58, Median Frames: 21.00
+Mode Frames: 6, count: 47
+
+Sign: sad
+Associated Parquet Files: 391
+Min Frames: 6, Max Frames: 261, Average Frames: 42.91, Median Frames: 24.00
+Mode Frames: 15, count: 21
+
+Sign: face
+Associated Parquet Files: 370
+Min Frames: 3, Max Frames: 330, Average Frames: 40.61, Median Frames: 24.00
+Mode Frames: 6, count: 51
+
+Sign: penny
+Associated Parquet Files: 390
+Min Frames: 2, Max Frames: 250, Average Frames: 34.34, Median Frames: 20.00
+Mode Frames: 6, count: 36
+
+Sign: gift
+Associated Parquet Files: 393
+Min Frames: 6, Max Frames: 233, Average Frames: 34.99, Median Frames: 20.00
+Mode Frames: 6, count: 69
+
+Sign: night
+Associated Parquet Files: 336
+Min Frames: 4, Max Frames: 262, Average Frames: 35.07, Median Frames: 19.00
+Mode Frames: 6, count: 95
+
+Sign: hair
+Associated Parquet Files: 385
+Min Frames: 5, Max Frames: 218, Average Frames: 40.77, Median Frames: 25.00
+Mode Frames: 6, count: 24
+
+Sign: who
+Associated Parquet Files: 403
+Min Frames: 3, Max Frames: 302, Average Frames: 40.28, Median Frames: 22.00
+Mode Frames: 16, count: 20
+
+Sign: think
+Associated Parquet Files: 399
+Min Frames: 5, Max Frames: 307, Average Frames: 38.58, Median Frames: 22.00
+Mode Frames: 6, count: 30
+
+Sign: brown
+Associated Parquet Files: 403
+Min Frames: 6, Max Frames: 237, Average Frames: 40.36, Median Frames: 25.00
+Mode Frames: 18, count: 22
+
+Sign: mad
+Associated Parquet Files: 392
+Min Frames: 2, Max Frames: 233, Average Frames: 33.31, Median Frames: 19.00
+Mode Frames: 6, count: 32
+
+Sign: bed
+Associated Parquet Files: 353
+Min Frames: 2, Max Frames: 248, Average Frames: 37.88, Median Frames: 21.00
+Mode Frames: 6, count: 51
+
+Sign: drink
+Associated Parquet Files: 400
+Min Frames: 6, Max Frames: 306, Average Frames: 38.95, Median Frames: 20.00
+Mode Frames: 6, count: 19
+
+Sign: stay
+Associated Parquet Files: 376
+Min Frames: 3, Max Frames: 274, Average Frames: 33.07, Median Frames: 18.00
+Mode Frames: 6, count: 90
+
+Sign: flag
+Associated Parquet Files: 386
+Min Frames: 2, Max Frames: 359, Average Frames: 43.06, Median Frames: 27.00
+Mode Frames: 6, count: 38
+
+Sign: tooth
+Associated Parquet Files: 393
+Min Frames: 4, Max Frames: 305, Average Frames: 38.47, Median Frames: 22.00
+Mode Frames: 6, count: 25
+
+Sign: awake
+Associated Parquet Files: 401
+Min Frames: 2, Max Frames: 208, Average Frames: 36.98, Median Frames: 24.00
+Mode Frames: 6, count: 22
+
+Sign: thankyou
+Associated Parquet Files: 357
+Min Frames: 6, Max Frames: 264, Average Frames: 30.07, Median Frames: 16.00
+Mode Frames: 6, count: 91
+
+Sign: hot
+Associated Parquet Files: 383
+Min Frames: 6, Max Frames: 206, Average Frames: 29.16, Median Frames: 16.00
+Mode Frames: 6, count: 70
+
+Sign: like
+Associated Parquet Files: 376
+Min Frames: 3, Max Frames: 213, Average Frames: 26.37, Median Frames: 14.00
+Mode Frames: 6, count: 85
+
+Sign: where
+Associated Parquet Files: 372
+Min Frames: 3, Max Frames: 250, Average Frames: 34.70, Median Frames: 21.00
+Mode Frames: 6, count: 39
+
+Sign: hesheit
+Associated Parquet Files: 357
+Min Frames: 4, Max Frames: 331, Average Frames: 39.85, Median Frames: 20.00
+Mode Frames: 6, count: 48
+
+Sign: potty
+Associated Parquet Files: 351
+Min Frames: 5, Max Frames: 278, Average Frames: 39.45, Median Frames: 25.00
+Mode Frames: 6, count: 43
+
+Sign: down
+Associated Parquet Files: 327
+Min Frames: 2, Max Frames: 257, Average Frames: 28.35, Median Frames: 12.00
+Mode Frames: 6, count: 122
+
+Sign: stuck
+Associated Parquet Files: 346
+Min Frames: 3, Max Frames: 282, Average Frames: 33.54, Median Frames: 19.00
+Mode Frames: 6, count: 44
+
+Sign: no
+Associated Parquet Files: 370
+Min Frames: 2, Max Frames: 225, Average Frames: 32.93, Median Frames: 19.00
+Mode Frames: 6, count: 69
+
+Sign: head
+Associated Parquet Files: 386
+Min Frames: 2, Max Frames: 537, Average Frames: 39.94, Median Frames: 21.50
+Mode Frames: 6, count: 65
+
+Sign: food
+Associated Parquet Files: 392
+Min Frames: 2, Max Frames: 318, Average Frames: 39.56, Median Frames: 23.00
+Mode Frames: 13, count: 18
+
+Sign: pretty
+Associated Parquet Files: 392
+Min Frames: 5, Max Frames: 257, Average Frames: 36.68, Median Frames: 21.00
+Mode Frames: 6, count: 60
+
+Sign: nuts
+Associated Parquet Files: 402
+Min Frames: 6, Max Frames: 218, Average Frames: 32.07, Median Frames: 19.00
+Mode Frames: 6, count: 28
+
+Sign: animal
+Associated Parquet Files: 348
+Min Frames: 2, Max Frames: 228, Average Frames: 43.75, Median Frames: 27.00
+Mode Frames: 6, count: 38
+
+Sign: frog
+Associated Parquet Files: 396
+Min Frames: 6, Max Frames: 307, Average Frames: 44.74, Median Frames: 26.00
+Mode Frames: 6, count: 26
+
+Sign: beside
+Associated Parquet Files: 310
+Min Frames: 2, Max Frames: 286, Average Frames: 34.33, Median Frames: 13.00
+Mode Frames: 6, count: 117
+
+Sign: noisy
+Associated Parquet Files: 361
+Min Frames: 3, Max Frames: 311, Average Frames: 40.34, Median Frames: 20.00
+Mode Frames: 6, count: 48
+
+Sign: water
+Associated Parquet Files: 384
+Min Frames: 3, Max Frames: 264, Average Frames: 40.42, Median Frames: 22.00
+Mode Frames: 17, count: 19
+
+Sign: weus
+Associated Parquet Files: 371
+Min Frames: 4, Max Frames: 293, Average Frames: 36.07, Median Frames: 22.00
+Mode Frames: 6, count: 55
+
+Sign: happy
+Associated Parquet Files: 379
+Min Frames: 2, Max Frames: 284, Average Frames: 39.55, Median Frames: 23.00
+Mode Frames: 6, count: 31
+
+Sign: white
+Associated Parquet Files: 370
+Min Frames: 3, Max Frames: 256, Average Frames: 31.57, Median Frames: 16.00
+Mode Frames: 6, count: 65
+
+Sign: bye
+Associated Parquet Files: 402
+Min Frames: 5, Max Frames: 206, Average Frames: 37.84, Median Frames: 23.00
+Mode Frames: 6, count: 28
+
+Sign: high
+Associated Parquet Files: 375
+Min Frames: 3, Max Frames: 293, Average Frames: 29.92, Median Frames: 16.00
+Mode Frames: 6, count: 79
+
+Sign: fine
+Associated Parquet Files: 360
+Min Frames: 3, Max Frames: 266, Average Frames: 31.49, Median Frames: 19.00
+Mode Frames: 6, count: 52
+
+Sign: boat
+Associated Parquet Files: 370
+Min Frames: 2, Max Frames: 273, Average Frames: 37.42, Median Frames: 20.00
+Mode Frames: 6, count: 52
+
+Sign: all
+Associated Parquet Files: 386
+Min Frames: 4, Max Frames: 248, Average Frames: 36.50, Median Frames: 21.00
+Mode Frames: 6, count: 70
+
+Sign: tiger
+Associated Parquet Files: 394
+Min Frames: 5, Max Frames: 280, Average Frames: 42.08, Median Frames: 24.50
+Mode Frames: 14, count: 20
+
+Sign: pencil
+Associated Parquet Files: 392
+Min Frames: 5, Max Frames: 276, Average Frames: 35.60, Median Frames: 19.00
+Mode Frames: 6, count: 42
+
+Sign: sleepy
+Associated Parquet Files: 403
+Min Frames: 3, Max Frames: 291, Average Frames: 42.19, Median Frames: 26.00
+Mode Frames: 6, count: 18
+
+Sign: grandma
+Associated Parquet Files: 382
+Min Frames: 2, Max Frames: 228, Average Frames: 31.92, Median Frames: 17.00
+Mode Frames: 6, count: 68
+
+Sign: chocolate
+Associated Parquet Files: 386
+Min Frames: 2, Max Frames: 413, Average Frames: 43.36, Median Frames: 27.00
+Mode Frames: 6, count: 28
+
+Sign: haveto
+Associated Parquet Files: 348
+Min Frames: 3, Max Frames: 293, Average Frames: 31.57, Median Frames: 17.00
+Mode Frames: 6, count: 102
+
+Sign: radio
+Associated Parquet Files: 387
+Min Frames: 6, Max Frames: 368, Average Frames: 41.71, Median Frames: 24.00
+Mode Frames: 6, count: 21
+
+Sign: farm
+Associated Parquet Files: 397
+Min Frames: 3, Max Frames: 245, Average Frames: 39.98, Median Frames: 24.00
+Mode Frames: 6, count: 41
+
+Sign: any
+Associated Parquet Files: 355
+Min Frames: 3, Max Frames: 211, Average Frames: 31.70, Median Frames: 16.00
+Mode Frames: 6, count: 90
+
+Sign: zebra
+Associated Parquet Files: 375
+Min Frames: 2, Max Frames: 300, Average Frames: 38.40, Median Frames: 23.00
+Mode Frames: 6, count: 59
+
+Sign: rain
+Associated Parquet Files: 381
+Min Frames: 4, Max Frames: 330, Average Frames: 40.50, Median Frames: 23.00
+Mode Frames: 6, count: 38
+
+Sign: toy
+Associated Parquet Files: 378
+Min Frames: 5, Max Frames: 272, Average Frames: 41.21, Median Frames: 25.00
+Mode Frames: 6, count: 30
+
+Sign: donkey
+Associated Parquet Files: 410
+Min Frames: 2, Max Frames: 351, Average Frames: 42.11, Median Frames: 25.00
+Mode Frames: 16, count: 18
+
+Sign: lion
+Associated Parquet Files: 392
+Min Frames: 6, Max Frames: 270, Average Frames: 39.91, Median Frames: 24.00
+Mode Frames: 6, count: 44
+
+Sign: drop
+Associated Parquet Files: 356
+Min Frames: 3, Max Frames: 311, Average Frames: 32.68, Median Frames: 12.50
+Mode Frames: 6, count: 124
+
+Sign: many
+Associated Parquet Files: 377
+Min Frames: 2, Max Frames: 279, Average Frames: 37.36, Median Frames: 18.00
+Mode Frames: 6, count: 59
+
+Sign: bath
+Associated Parquet Files: 351
+Min Frames: 2, Max Frames: 291, Average Frames: 37.83, Median Frames: 23.00
+Mode Frames: 6, count: 53
+
+Sign: aunt
+Associated Parquet Files: 391
+Min Frames: 6, Max Frames: 319, Average Frames: 45.05, Median Frames: 27.00
+Mode Frames: 12, count: 17
+
+Sign: will
+Associated Parquet Files: 369
+Min Frames: 6, Max Frames: 257, Average Frames: 31.23, Median Frames: 16.00
+Mode Frames: 6, count: 85
+
+Sign: hate
+Associated Parquet Files: 358
+Min Frames: 2, Max Frames: 255, Average Frames: 31.14, Median Frames: 15.00
+Mode Frames: 6, count: 91
+
+Sign: on
+Associated Parquet Files: 368
+Min Frames: 2, Max Frames: 237, Average Frames: 30.76, Median Frames: 17.00
+Mode Frames: 6, count: 69
+
+Sign: pretend
+Associated Parquet Files: 404
+Min Frames: 2, Max Frames: 453, Average Frames: 42.89, Median Frames: 22.00
+Mode Frames: 6, count: 26
+
+Sign: kitty
+Associated Parquet Files: 389
+Min Frames: 5, Max Frames: 360, Average Frames: 46.62, Median Frames: 30.00
+Mode Frames: 6, count: 24
+
+Sign: fireman
+Associated Parquet Files: 402
+Min Frames: 3, Max Frames: 277, Average Frames: 41.13, Median Frames: 25.00
+Mode Frames: 6, count: 22
+
+Sign: before
+Associated Parquet Files: 354
+Min Frames: 6, Max Frames: 272, Average Frames: 31.95, Median Frames: 17.00
+Mode Frames: 6, count: 56
+
+Sign: doll
+Associated Parquet Files: 400
+Min Frames: 5, Max Frames: 227, Average Frames: 38.20, Median Frames: 24.00
+Mode Frames: 14, count: 20
+
+Sign: stairs
+Associated Parquet Files: 382
+Min Frames: 2, Max Frames: 296, Average Frames: 39.88, Median Frames: 23.00
+Mode Frames: 6, count: 34
+
+Sign: kiss
+Associated Parquet Files: 396
+Min Frames: 2, Max Frames: 236, Average Frames: 36.71, Median Frames: 21.00
+Mode Frames: 6, count: 42
+
+Sign: loud
+Associated Parquet Files: 389
+Min Frames: 3, Max Frames: 327, Average Frames: 38.68, Median Frames: 22.00
+Mode Frames: 6, count: 43
+
+Sign: hen
+Associated Parquet Files: 377
+Min Frames: 4, Max Frames: 236, Average Frames: 41.93, Median Frames: 27.00
+Mode Frames: 6, count: 17
+
+Sign: listen
+Associated Parquet Files: 415
+Min Frames: 6, Max Frames: 224, Average Frames: 34.77, Median Frames: 22.00
+Mode Frames: 15, count: 29
+
+Sign: give
+Associated Parquet Files: 346
+Min Frames: 2, Max Frames: 248, Average Frames: 29.68, Median Frames: 15.00
+Mode Frames: 6, count: 101
+
+Sign: wolf
+Associated Parquet Files: 388
+Min Frames: 2, Max Frames: 295, Average Frames: 33.23, Median Frames: 19.00
+Mode Frames: 6, count: 62
+
+Sign: dad
+Associated Parquet Files: 378
+Min Frames: 5, Max Frames: 275, Average Frames: 37.43, Median Frames: 22.00
+Mode Frames: 6, count: 28
+
+Sign: gum
+Associated Parquet Files: 390
+Min Frames: 3, Max Frames: 315, Average Frames: 46.27, Median Frames: 28.00
+Mode Frames: 15, count: 15
+
+Sign: hear
+Associated Parquet Files: 405
+Min Frames: 6, Max Frames: 358, Average Frames: 37.48, Median Frames: 22.00
+Mode Frames: 6, count: 27
+
+Sign: refrigerator
+Associated Parquet Files: 363
+Min Frames: 3, Max Frames: 309, Average Frames: 46.81, Median Frames: 33.00
+Mode Frames: 6, count: 13
+
+Sign: outside
+Associated Parquet Files: 386
+Min Frames: 4, Max Frames: 303, Average Frames: 34.70, Median Frames: 20.00
+Mode Frames: 6, count: 58
+
+Sign: cut
+Associated Parquet Files: 369
+Min Frames: 2, Max Frames: 230, Average Frames: 32.70, Median Frames: 17.00
+Mode Frames: 6, count: 54
+
+Sign: underwear
+Associated Parquet Files: 373
+Min Frames: 6, Max Frames: 535, Average Frames: 45.12, Median Frames: 25.00
+Mode Frames: 6, count: 24
+
+Sign: please
+Associated Parquet Files: 384
+Min Frames: 6, Max Frames: 300, Average Frames: 50.03, Median Frames: 30.00
+Mode Frames: 6, count: 26
+
+Sign: child
+Associated Parquet Files: 348
+Min Frames: 6, Max Frames: 299, Average Frames: 36.40, Median Frames: 20.00
+Mode Frames: 6, count: 63
+
+Sign: smile
+Associated Parquet Files: 376
+Min Frames: 4, Max Frames: 254, Average Frames: 34.17, Median Frames: 21.00
+Mode Frames: 6, count: 38
+
+Sign: pen
+Associated Parquet Files: 399
+Min Frames: 4, Max Frames: 314, Average Frames: 40.51, Median Frames: 23.00
+Mode Frames: 6, count: 36
+
+Sign: yesterday
+Associated Parquet Files: 398
+Min Frames: 5, Max Frames: 265, Average Frames: 39.46, Median Frames: 23.00
+Mode Frames: 6, count: 25
+
+Sign: horse
+Associated Parquet Files: 391
+Min Frames: 2, Max Frames: 219, Average Frames: 42.52, Median Frames: 26.00
+Mode Frames: 6, count: 22
+
+Sign: pig
+Associated Parquet Files: 368
+Min Frames: 6, Max Frames: 249, Average Frames: 41.75, Median Frames: 23.00
+Mode Frames: 6, count: 25
+
+Sign: table
+Associated Parquet Files: 337
+Min Frames: 3, Max Frames: 300, Average Frames: 34.21, Median Frames: 19.00
+Mode Frames: 6, count: 75
+
+Sign: eye
+Associated Parquet Files: 395
+Min Frames: 3, Max Frames: 251, Average Frames: 39.42, Median Frames: 22.00
+Mode Frames: 6, count: 26
+
+Sign: snack
+Associated Parquet Files: 381
+Min Frames: 6, Max Frames: 281, Average Frames: 42.77, Median Frames: 26.00
+Mode Frames: 6, count: 25
+
+Sign: story
+Associated Parquet Files: 369
+Min Frames: 5, Max Frames: 307, Average Frames: 43.38, Median Frames: 27.00
+Mode Frames: 6, count: 33
+
+Sign: police
+Associated Parquet Files: 388
+Min Frames: 6, Max Frames: 240, Average Frames: 40.27, Median Frames: 25.00
+Mode Frames: 6, count: 20
+
+Sign: arm
+Associated Parquet Files: 362
+Min Frames: 2, Max Frames: 306, Average Frames: 38.20, Median Frames: 24.00
+Mode Frames: 6, count: 74
+
+Sign: talk
+Associated Parquet Files: 394
+Min Frames: 4, Max Frames: 312, Average Frames: 39.64, Median Frames: 23.00
+Mode Frames: 6, count: 20
+
+Sign: grandpa
+Associated Parquet Files: 387
+Min Frames: 3, Max Frames: 279, Average Frames: 34.81, Median Frames: 20.00
+Mode Frames: 6, count: 50
+
+Sign: tongue
+Associated Parquet Files: 374
+Min Frames: 6, Max Frames: 278, Average Frames: 35.37, Median Frames: 21.00
+Mode Frames: 6, count: 33
+
+Sign: pool
+Associated Parquet Files: 363
+Min Frames: 2, Max Frames: 382, Average Frames: 48.50, Median Frames: 26.00
+Mode Frames: 6, count: 38
+
+Sign: girl
+Associated Parquet Files: 378
+Min Frames: 6, Max Frames: 221, Average Frames: 31.40, Median Frames: 18.50
+Mode Frames: 6, count: 48
+
+Sign: up
+Associated Parquet Files: 394
+Min Frames: 6, Max Frames: 237, Average Frames: 34.24, Median Frames: 19.00
+Mode Frames: 6, count: 31
+
+Sign: better
+Associated Parquet Files: 376
+Min Frames: 4, Max Frames: 267, Average Frames: 32.49, Median Frames: 19.00
+Mode Frames: 6, count: 74
+
+Sign: tree
+Associated Parquet Files: 382
+Min Frames: 6, Max Frames: 295, Average Frames: 42.00, Median Frames: 25.00
+Mode Frames: 6, count: 35
+
+Sign: dance
+Associated Parquet Files: 312
+Min Frames: 4, Max Frames: 267, Average Frames: 31.18, Median Frames: 17.00
+Mode Frames: 6, count: 89
+
+Sign: close
+Associated Parquet Files: 374
+Min Frames: 3, Max Frames: 312, Average Frames: 36.77, Median Frames: 19.00
+Mode Frames: 6, count: 59
+
+Sign: taste
+Associated Parquet Files: 392
+Min Frames: 2, Max Frames: 221, Average Frames: 34.31, Median Frames: 21.00
+Mode Frames: 6, count: 24
+
+Sign: chin
+Associated Parquet Files: 346
+Min Frames: 5, Max Frames: 272, Average Frames: 48.28, Median Frames: 27.00
+Mode Frames: 6, count: 25
+
+Sign: ride
+Associated Parquet Files: 347
+Min Frames: 4, Max Frames: 251, Average Frames: 31.09, Median Frames: 18.00
+Mode Frames: 6, count: 77
+
+Sign: because
+Associated Parquet Files: 395
+Min Frames: 4, Max Frames: 214, Average Frames: 37.44, Median Frames: 22.00
+Mode Frames: 6, count: 34
+
+Sign: if
+Associated Parquet Files: 366
+Min Frames: 6, Max Frames: 303, Average Frames: 40.78, Median Frames: 22.00
+Mode Frames: 6, count: 38
+
+Sign: cat
+Associated Parquet Files: 400
+Min Frames: 6, Max Frames: 223, Average Frames: 37.95, Median Frames: 23.00
+Mode Frames: 6, count: 41
+
+Sign: why
+Associated Parquet Files: 364
+Min Frames: 4, Max Frames: 233, Average Frames: 34.43, Median Frames: 19.00
+Mode Frames: 6, count: 54
+
+Sign: carrot
+Associated Parquet Files: 386
+Min Frames: 6, Max Frames: 243, Average Frames: 38.30, Median Frames: 24.00
+Mode Frames: 6, count: 20
+
+Sign: dog
+Associated Parquet Files: 380
+Min Frames: 3, Max Frames: 277, Average Frames: 39.91, Median Frames: 23.00
+Mode Frames: 6, count: 45
+
+Sign: mouse
+Associated Parquet Files: 408
+Min Frames: 2, Max Frames: 230, Average Frames: 39.12, Median Frames: 24.00
+Mode Frames: 13, count: 17
+
+Sign: jeans
+Associated Parquet Files: 382
+Min Frames: 2, Max Frames: 285, Average Frames: 47.12, Median Frames: 30.00
+Mode Frames: 6, count: 63
+
+Sign: shower
+Associated Parquet Files: 372
+Min Frames: 3, Max Frames: 307, Average Frames: 38.10, Median Frames: 22.00
+Mode Frames: 6, count: 41
+
+Sign: later
+Associated Parquet Files: 377
+Min Frames: 3, Max Frames: 236, Average Frames: 35.45, Median Frames: 20.00
+Mode Frames: 6, count: 65
+
+Sign: mom
+Associated Parquet Files: 395
+Min Frames: 3, Max Frames: 322, Average Frames: 35.53, Median Frames: 21.00
+Mode Frames: 6, count: 27
+
+Sign: nose
+Associated Parquet Files: 382
+Min Frames: 3, Max Frames: 291, Average Frames: 38.45, Median Frames: 21.00
+Mode Frames: 11, count: 22
+
+Sign: yes
+Associated Parquet Files: 386
+Min Frames: 4, Max Frames: 247, Average Frames: 41.80, Median Frames: 22.00
+Mode Frames: 6, count: 35
+
+Sign: airplane
+Associated Parquet Files: 393
+Min Frames: 2, Max Frames: 248, Average Frames: 43.95, Median Frames: 27.00
+Mode Frames: 6, count: 25
+
+Sign: book
+Associated Parquet Files: 368
+Min Frames: 2, Max Frames: 239, Average Frames: 36.07, Median Frames: 20.00
+Mode Frames: 6, count: 61
+
+Sign: blue
+Associated Parquet Files: 362
+Min Frames: 4, Max Frames: 311, Average Frames: 36.55, Median Frames: 22.00
+Mode Frames: 6, count: 47
+
+Sign: icecream
+Associated Parquet Files: 398
+Min Frames: 5, Max Frames: 249, Average Frames: 39.89, Median Frames: 23.00
+Mode Frames: 6, count: 18
+
+Sign: garbage
+Associated Parquet Files: 371
+Min Frames: 5, Max Frames: 308, Average Frames: 39.07, Median Frames: 22.00
+Mode Frames: 6, count: 37
+
+Sign: tomorrow
+Associated Parquet Files: 388
+Min Frames: 4, Max Frames: 247, Average Frames: 31.90, Median Frames: 20.00
+Mode Frames: 6, count: 64
+
+Sign: red
+Associated Parquet Files: 379
+Min Frames: 2, Max Frames: 259, Average Frames: 35.92, Median Frames: 20.00
+Mode Frames: 6, count: 36
+
+Sign: cow
+Associated Parquet Files: 404
+Min Frames: 3, Max Frames: 241, Average Frames: 40.90, Median Frames: 24.00
+Mode Frames: 6, count: 20
+
+Sign: person
+Associated Parquet Files: 312
+Min Frames: 2, Max Frames: 279, Average Frames: 28.92, Median Frames: 15.50
+Mode Frames: 6, count: 100
+
+Sign: puppy
+Associated Parquet Files: 357
+Min Frames: 3, Max Frames: 329, Average Frames: 49.94, Median Frames: 31.00
+Mode Frames: 6, count: 33
+
+Sign: cereal
+Associated Parquet Files: 379
+Min Frames: 6, Max Frames: 285, Average Frames: 44.11, Median Frames: 27.00
+Mode Frames: 6, count: 24
+
+Sign: touch
+Associated Parquet Files: 372
+Min Frames: 2, Max Frames: 298, Average Frames: 35.66, Median Frames: 20.00
+Mode Frames: 6, count: 64
+
+Sign: mouth
+Associated Parquet Files: 391
+Min Frames: 6, Max Frames: 270, Average Frames: 43.19, Median Frames: 27.00
+Mode Frames: 6, count: 22
+
+Sign: boy
+Associated Parquet Files: 382
+Min Frames: 3, Max Frames: 299, Average Frames: 37.01, Median Frames: 21.00
+Mode Frames: 6, count: 26
+
+Sign: thirsty
+Associated Parquet Files: 360
+Min Frames: 2, Max Frames: 246, Average Frames: 37.68, Median Frames: 21.00
+Mode Frames: 6, count: 49
+
+Sign: make
+Associated Parquet Files: 398
+Min Frames: 6, Max Frames: 240, Average Frames: 39.01, Median Frames: 22.00
+Mode Frames: 6, count: 36
+
+Sign: for
+Associated Parquet Files: 384
+Min Frames: 3, Max Frames: 293, Average Frames: 35.30, Median Frames: 21.00
+Mode Frames: 6, count: 43
+
+Sign: glasswindow
+Associated Parquet Files: 390
+Min Frames: 4, Max Frames: 311, Average Frames: 50.40, Median Frames: 29.00
+Mode Frames: 6, count: 16
+
+Sign: into
+Associated Parquet Files: 364
+Min Frames: 2, Max Frames: 248, Average Frames: 32.42, Median Frames: 17.00
+Mode Frames: 6, count: 90
+
+Sign: read
+Associated Parquet Files: 362
+Min Frames: 2, Max Frames: 321, Average Frames: 39.28, Median Frames: 21.00
+Mode Frames: 6, count: 71
+
+Sign: every
+Associated Parquet Files: 368
+Min Frames: 3, Max Frames: 270, Average Frames: 38.25, Median Frames: 20.00
+Mode Frames: 6, count: 64
+
+Sign: bedroom
+Associated Parquet Files: 388
+Min Frames: 4, Max Frames: 344, Average Frames: 44.13, Median Frames: 23.00
+Mode Frames: 6, count: 45
+
+Sign: napkin
+Associated Parquet Files: 398
+Min Frames: 3, Max Frames: 239, Average Frames: 40.00, Median Frames: 23.50
+Mode Frames: 15, count: 22
+
+Sign: ear
+Associated Parquet Files: 389
+Min Frames: 6, Max Frames: 264, Average Frames: 39.16, Median Frames: 25.00
+Mode Frames: 6, count: 23
+
+Sign: toothbrush
+Associated Parquet Files: 402
+Min Frames: 2, Max Frames: 314, Average Frames: 45.55, Median Frames: 26.00
+Mode Frames: 6, count: 30
+
+Sign: home
+Associated Parquet Files: 395
+Min Frames: 5, Max Frames: 231, Average Frames: 37.16, Median Frames: 22.00
+Mode Frames: 6, count: 23
+
+Sign: pajamas
+Associated Parquet Files: 389
+Min Frames: 2, Max Frames: 301, Average Frames: 43.92, Median Frames: 25.00
+Mode Frames: 6, count: 41
+
+Sign: hello
+Associated Parquet Files: 390
+Min Frames: 2, Max Frames: 272, Average Frames: 32.56, Median Frames: 20.00
+Mode Frames: 6, count: 53
+
+Sign: helicopter
+Associated Parquet Files: 379
+Min Frames: 2, Max Frames: 455, Average Frames: 45.96, Median Frames: 27.00
+Mode Frames: 6, count: 41
+
+Sign: lamp
+Associated Parquet Files: 370
+Min Frames: 6, Max Frames: 335, Average Frames: 47.27, Median Frames: 27.00
+Mode Frames: 6, count: 27
+
+Sign: room
+Associated Parquet Files: 372
+Min Frames: 4, Max Frames: 262, Average Frames: 33.76, Median Frames: 19.00
+Mode Frames: 6, count: 74
+
+Sign: dirty
+Associated Parquet Files: 365
+Min Frames: 6, Max Frames: 273, Average Frames: 36.62, Median Frames: 23.00
+Mode Frames: 6, count: 26
+
+Sign: chair
+Associated Parquet Files: 368
+Min Frames: 2, Max Frames: 303, Average Frames: 35.17, Median Frames: 19.50
+Mode Frames: 6, count: 65
+
+Sign: hat
+Associated Parquet Files: 342
+Min Frames: 2, Max Frames: 238, Average Frames: 35.63, Median Frames: 19.50
+Mode Frames: 6, count: 64
+
+Sign: elephant
+Associated Parquet Files: 382
+Min Frames: 3, Max Frames: 223, Average Frames: 34.93, Median Frames: 17.00
+Mode Frames: 6, count: 81
+
+Sign: after
+Associated Parquet Files: 347
+Min Frames: 2, Max Frames: 248, Average Frames: 30.39, Median Frames: 16.00
+Mode Frames: 6, count: 112
+
+Sign: car
+Associated Parquet Files: 353
+Min Frames: 2, Max Frames: 267, Average Frames: 40.33, Median Frames: 26.00
+Mode Frames: 6, count: 48
+
+Sign: hide
+Associated Parquet Files: 363
+Min Frames: 5, Max Frames: 223, Average Frames: 32.05, Median Frames: 20.00
+Mode Frames: 6, count: 96
+
+Sign: goose
+Associated Parquet Files: 394
+Min Frames: 5, Max Frames: 248, Average Frames: 46.54, Median Frames: 28.00
+Mode Frames: 23, count: 17
+
+Overall Frame Landmarks Statistics:
+Min Landmarks per Frame: 543
+Max Landmarks per Frame: 543
+Average Landmarks per Frame: 543.00
+Median Landmarks per Frame: 543.00
+Average frame count across all signs: 37.94
